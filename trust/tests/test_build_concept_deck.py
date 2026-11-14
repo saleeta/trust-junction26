@@ -22,6 +22,7 @@ REVIEW = {
             "dd84922|PR #1: final_price"],
     "claims": [
         {"id": "A1", "label": "Refuted",
+         "formula": "FORALL b in BASKETS: total(b) >= 0",
          "example": "A shopper with a HALF coupon, 10 items, a member is "
                     "charged -100."},
         {"id": "A2", "label": "Refuted", "example": "README says never."},
