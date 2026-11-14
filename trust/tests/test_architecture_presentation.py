@@ -28,10 +28,10 @@ def test_timed_architecture_deck_and_published_copy():
         ROOT / "docs/claim-tableau.html").read_text(encoding="utf-8")
     # the deep-dive layer: formal logic, node joins, verdict rules,
     # codebase-wide re-checking, and the named acceptance
-    for fact in ("detailsBtn", "∀ p ∈ PRODUCTS", "harvested-from",
+    for fact in ("detailsBtn", "∀ xs ∈ LISTS", "harvested-from",
                  "R-RUN", "R-CALL", "R-HIST", "one witness refutes",
-                 "PROVED IN SCOPE", "Saleeta Qadir", "unknown product",
-                 "get_price", "never crash", "counterexample"):
+                 "PROVED IN SCOPE", "Saleeta Qadir", "empty list",
+                 "average([])", "ZeroDivisionError", "never crash", "counterexample"):
         assert fact.lower() in source.lower()
     # the old target-framework example is gone from the stage story
     for gone in ("netstandard2.0", "net472", "ExcludeFromCodeCoverage"):
