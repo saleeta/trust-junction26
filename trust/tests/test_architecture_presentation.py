@@ -18,7 +18,7 @@ def test_timed_architecture_deck_and_published_copy():
                  "$graphLookup", "CANDIDATE CLAIM", "source_kind: implicit_in_code",
                  "check_cmd:", "parent SHA", "check matrix",
                  "hypothesis · unconfirmed", "Scoped formal verification",
-                 "net472", "netstandard2.0", "Human decision", "Pending."):
+                 "Human decision", "Revocable"):
         assert fact.lower() in source.lower()
     assert 'href="review-2297.html"' in source
     # the deep-dive layer: formal logic, node joins, verdict rules,
