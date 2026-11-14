@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review of every demo PR - verdicts, direction, token costs</title>
+<style>
+:root{--paper:#f6f4ef;--ink:#1d2333;--muted:#68707f;--line:#d3d7dc;--accent:#6d4a9e;--red:#b0413e;--amber:#9a6a1f;--green:#2f7d5d}
+body{margin:0;background:#e9e7e1;color:var(--ink);font-family:Arial,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:34px 24px 60px}
+h1{font:normal clamp(30px,4vw,52px)/1.05 Georgia,serif;letter-spacing:-.03em;margin:6px 0}
+.lead{color:#4a5468;font-size:17px;max-width:900px}
+table{width:100%;border-collapse:collapse;background:#fffdf9;border:1px solid var(--line);margin-top:18px}
+th{font:700 12px Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:#f0ede6}
+td{vertical-align:top;padding:12px;border-bottom:1px solid var(--line);font-size:14px}
+td.pr{width:64px} td.title{width:300px} td.claims{min-width:340px} td.tok{width:200px}
+.dim{color:var(--muted);font-size:12.5px}
+.claim{padding:3px 0;font-size:13.5px}
+.tag{display:inline-block;font:700 10px Consolas,monospace;border-radius:9px;padding:1px 8px;margin-right:4px;letter-spacing:.04em}
+.tag.bad{background:#f8e8e5;color:var(--red)} .tag.ok{background:#e2efe9;color:var(--green)}
+.tag.mid{background:#f8eedd;color:var(--amber)} .tag.dim{background:#e9e7e1;color:var(--muted)}
+.tok span{font:12px Consolas,monospace;color:var(--muted);display:block;margin:2px 0}
+.bar{height:10px;border-radius:5px;margin-top:2px}
+.bar.basic{background:#c9cdd6} .bar.pipe{background:var(--accent)}
+.foot{color:var(--muted);font-size:12.5px;margin-top:12px}
+a{color:var(--accent)}
+</style></head><body><main>
+<h1>Every demo PR, reviewed</h1>
+<p class="lead">The same proof-carrying analyzer ran on each PR's base..head pair.
+Verdicts use the four honest labels. "Direction" states what the PR means for
+where the project is going. Token figures compare a basic AI reading the whole
+diff against this pipeline carrying only the evidence it needs - estimates
+(chars/4), labelled as such.</p>
+<table>
+<tr><th>PR</th><th>what it is · direction</th><th>verdicts from the checker</th><th>tokens</th></tr>
+
+        <tr>
+          <td class="pr"><b>#1</b><br><span class="dim">ff46d84</span></td>
+          <td class="title">Base resolver, TFM-guard assumption check, and runnable demo script
+<br><span class="dim">Foundation - base resolution becomes a checked assumption; the TFM-guard checker ships.</span></td>
+          <td class="claims"><div class='claim'><span class='tag bad'>Refuted</span> <b>G1</b> Every symbol this change touches is mentioned by at least one test file. <span class='dim'> witness: {"s": "because"}</span></div><div class='claim'><span class='tag dim'>Unknown</span> <b>H1</b> .trust/issues/2297.md:11 says: "I would like all generated code to be decorated with ExcludeFromCodeCoverage" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>H2</b> DEMO.md:3 says: "Every command below has been run on this machine. Copy-paste order, ~6 minutes." </div><div class='claim'><span class='tag dim'>Unknown</span> <b>H3</b> DEMO.md:14 says: "It reported that all four agentic branches re-applied a dependency bump the" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K1</b> <module>() in .trust/issues/2297.md keeps behaving correctly after because() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K2</b> <module>() in DEMO.md keeps behaving correctly after Probe() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K3</b> <module>() in DESIGN.md keeps behaving correctly after because() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K4</b> <module>() in sprints.md keeps behaving correctly after exists() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K5</b> Finding() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Guard() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K6</b> analyse() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Finding() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K7</b> main() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Finding() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>U1</b> This change does what its author and the requirement intended. </div></td>
+          <td class="tok">
+            <div class="bar basic" style="width:34%"></div>
+            <span>basic AI ~12,719 tok</span>
+            <div class="bar pipe" style="width:1%"></div>
+            <span>pipeline ~509 tok</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pr"><b>#2</b><br><span class="dim">12150ee</span></td>
+          <td class="title">Add test suite: 87 tests, including regressions for shipped bugs
+<br><span class="dim">Hardening - the regression test suite for already-shipped bugs.</span></td>
+          <td class="claims"><div class='claim'><span class='tag ok'>Proved within scope</span> <b>G1</b> Every symbol this change touches is mentioned by at least one test file. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>U1</b> This change does what its author and the requirement intended. </div></td>
+          <td class="tok">
+            <div class="bar basic" style="width:29%"></div>
+            <span>basic AI ~10,885 tok</span>
+            <div class="bar pipe" style="width:0%"></div>
+            <span>pipeline ~69 tok</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pr"><b>#3</b><br><span class="dim">64e9721</span></td>
+          <td class="title">Automate the A/B arms; withdraw a design claim the measurement disproved
+<br><span class="dim">Honesty pivot - the A/B arms are automated and a design claim the measurement disproved is withdrawn.</span></td>
+          <td class="claims"><div class='claim'><span class='tag bad'>Refuted</span> <b>G1</b> Every symbol this change touches is mentioned by at least one test file. <span class='dim'> witness: {"s": "capsule_base"}</span></div><div class='claim'><span class='tag dim'>Unknown</span> <b>H1</b> DESIGN.md:333 says: "harness disproves it: across all four branches Arm B loads 1.08x-2.7x **more**" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>H2</b> DESIGN.md:335 says: "`run_ab.py` prints this loss itself. The claim is withdrawn and must not be" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>H3</b> DESIGN.md:339 says: "all four branches** - the same base-misresolution artefact that fooled this" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K1</b> <module>() in .trust/ab/2129.json keeps behaving correctly after bytes_read() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K2</b> <module>() in .trust/ab/2234.json keeps behaving correctly after bytes_read() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K3</b> <module>() in .trust/ab/2283.json keeps behaving correctly after bytes_read() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K4</b> <module>() in .trust/ab/2297.json keeps behaving correctly after bytes_read() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K5</b> <module>() in DEMO.md keeps behaving correctly after show() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K6</b> <module>() in DESIGN.md keeps behaving correctly after show() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>U1</b> This change does what its author and the requirement intended. </div></td>
+          <td class="tok">
+            <div class="bar basic" style="width:30%"></div>
+            <span>basic AI ~11,200 tok</span>
+            <div class="bar pipe" style="width:1%"></div>
+            <span>pipeline ~411 tok</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pr"><b>#4</b><br><span class="dim">4088340</span></td>
+          <td class="title">Blast-radius engine, graph retrieval, LLM cost arms, one-command demo
+<br><span class="dim">The differentiator - blast-radius engine, graph retrieval, LLM cost arms and the one-command demo.</span></td>
+          <td class="claims"><div class='claim'><span class='tag bad'>Refuted</span> <b>G1</b> Every symbol this change touches is mentioned by at least one test file. <span class='dim'> witness: {"s": "AssumptionClass"}</span></div><div class='claim'><span class='tag dim'>Unknown</span> <b>H1</b> .trust/repro/2297/README.md:31 says: "- Not a complaint about the whole change. The same agent updated all six" </div><div class='claim'><span class='tag dim'>Unknown</span> <b>H2</b> .trust/repro/2297/README.md:33 says: "sync. Only the target-framework conditionality is wrong." </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K1</b> <module>() in .trust/ab/2129.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K2</b> <module>() in .trust/ab/2234.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K3</b> <module>() in .trust/ab/2283.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K4</b> <module>() in .trust/ab/2297.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K5</b> <module>() in .trust/bases.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K6</b> <module>() in .trust/findings/2297-blast.json keeps behaving correctly after changed() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>U1</b> This change does what its author and the requirement intended. </div></td>
+          <td class="tok">
+            <div class="bar basic" style="width:100%"></div>
+            <span>basic AI ~36,580 tok</span>
+            <div class="bar pipe" style="width:1%"></div>
+            <span>pipeline ~379 tok</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="pr"><b>#5</b><br><span class="dim">pr5</span></td>
+          <td class="title">PR #5: cap total discount at 100% (human-approved fix)
+<br><span class="dim">Completed outcome - the corrected sample that re-ran the checkers and was accepted by the named engineer.</span></td>
+          <td class="claims"><div class='claim'><span class='tag bad'>Refuted</span> <b>G1</b> Every symbol this change touches is mentioned by at least one test file. <span class='dim'> witness: {"s": "final_price"}</span></div><div class='claim'><span class='tag dim'>Unknown</span> <b>K1</b> checkout() in shop/checkout.py keeps behaving correctly after final_price() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>K2</b> post_sale() in shop/ledger.py keeps behaving correctly after final_price() changed. </div><div class='claim'><span class='tag dim'>Unknown</span> <b>U1</b> This change does what its author and the requirement intended. </div></td>
+          <td class="tok">
+            <div class="bar basic" style="width:0%"></div>
+            <span>basic AI ~272 tok</span>
+            <div class="bar pipe" style="width:0%"></div>
+            <span>pipeline ~145 tok</span>
+          </td>
+        </tr>
+</table>
+<p class="foot">Reviewer: trust/generic/analyze.py (static + executed tiers). Evidence per PR in
+<a href="../.trust/pr-reviews/">.trust/pr-reviews/</a>. The known-gap sample stays pending on
+<a href="https://entire.com/et/earned-trust-review/-/trails/1">Entire Trail #1</a>; the corrected
+sample was accepted on <a href="https://entire.com/et/earned-trust-review/-/trails/2">Trail #2</a>.</p>
+</main></body></html>

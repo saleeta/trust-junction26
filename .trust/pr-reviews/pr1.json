@@ -1,0 +1,99 @@
+{
+  "pr": 1,
+  "base": "504da84",
+  "head": "ff46d84",
+  "title": "Base resolver, TFM-guard assumption check, and runnable demo script\n",
+  "direction": "Foundation - base resolution becomes a checked assumption; the TFM-guard checker ships.",
+  "claims": [
+    {
+      "id": "G1",
+      "label": "Refuted",
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "witnesses": [
+        {
+          "s": "because"
+        },
+        {
+          "s": "Guard"
+        },
+        {
+          "s": "Probe"
+        },
+        {
+          "s": "Finding"
+        }
+      ]
+    },
+    {
+      "id": "H1",
+      "label": "Unknown",
+      "claim": ".trust/issues/2297.md:11 says: \"I would like all generated code to be decorated with ExcludeFromCodeCoverage\"",
+      "witnesses": []
+    },
+    {
+      "id": "H2",
+      "label": "Unknown",
+      "claim": "DEMO.md:3 says: \"Every command below has been run on this machine. Copy-paste order, ~6 minutes.\"",
+      "witnesses": []
+    },
+    {
+      "id": "H3",
+      "label": "Unknown",
+      "claim": "DEMO.md:14 says: \"It reported that all four agentic branches re-applied a dependency bump the\"",
+      "witnesses": []
+    },
+    {
+      "id": "K1",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/issues/2297.md keeps behaving correctly after because() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K2",
+      "label": "Unknown",
+      "claim": "<module>() in DEMO.md keeps behaving correctly after Probe() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K3",
+      "label": "Unknown",
+      "claim": "<module>() in DESIGN.md keeps behaving correctly after because() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K4",
+      "label": "Unknown",
+      "claim": "<module>() in sprints.md keeps behaving correctly after exists() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K5",
+      "label": "Unknown",
+      "claim": "Finding() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Guard() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K6",
+      "label": "Unknown",
+      "claim": "analyse() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Finding() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K7",
+      "label": "Unknown",
+      "claim": "main() in trust/assumptions/tfm_guard_check.py keeps behaving correctly after Finding() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "U1",
+      "label": "Unknown",
+      "claim": "This change does what its author and the requirement intended.",
+      "witnesses": []
+    }
+  ],
+  "tokens": {
+    "basic_ai": 12719,
+    "pipeline": 509
+  },
+  "error": null
+}

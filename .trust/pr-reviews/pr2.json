@@ -1,0 +1,26 @@
+{
+  "pr": 2,
+  "base": "ff46d84",
+  "head": "12150ee",
+  "title": "Add test suite: 87 tests, including regressions for shipped bugs\n",
+  "direction": "Hardening - the regression test suite for already-shipped bugs.",
+  "claims": [
+    {
+      "id": "G1",
+      "label": "Proved within scope",
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "witnesses": []
+    },
+    {
+      "id": "U1",
+      "label": "Unknown",
+      "claim": "This change does what its author and the requirement intended.",
+      "witnesses": []
+    }
+  ],
+  "tokens": {
+    "basic_ai": 10885,
+    "pipeline": 69
+  },
+  "error": null
+}

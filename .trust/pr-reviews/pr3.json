@@ -1,0 +1,84 @@
+{
+  "pr": 3,
+  "base": "12150ee",
+  "head": "64e9721",
+  "title": "Automate the A/B arms; withdraw a design claim the measurement disproved\n",
+  "direction": "Honesty pivot - the A/B arms are automated and a design claim the measurement disproved is withdrawn.",
+  "claims": [
+    {
+      "id": "G1",
+      "label": "Refuted",
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "witnesses": [
+        {
+          "s": "capsule_base"
+        }
+      ]
+    },
+    {
+      "id": "H1",
+      "label": "Unknown",
+      "claim": "DESIGN.md:333 says: \"harness disproves it: across all four branches Arm B loads 1.08x-2.7x **more**\"",
+      "witnesses": []
+    },
+    {
+      "id": "H2",
+      "label": "Unknown",
+      "claim": "DESIGN.md:335 says: \"`run_ab.py` prints this loss itself. The claim is withdrawn and must not be\"",
+      "witnesses": []
+    },
+    {
+      "id": "H3",
+      "label": "Unknown",
+      "claim": "DESIGN.md:339 says: \"all four branches** - the same base-misresolution artefact that fooled this\"",
+      "witnesses": []
+    },
+    {
+      "id": "K1",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2129.json keeps behaving correctly after bytes_read() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K2",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2234.json keeps behaving correctly after bytes_read() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K3",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2283.json keeps behaving correctly after bytes_read() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K4",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2297.json keeps behaving correctly after bytes_read() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K5",
+      "label": "Unknown",
+      "claim": "<module>() in DEMO.md keeps behaving correctly after show() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K6",
+      "label": "Unknown",
+      "claim": "<module>() in DESIGN.md keeps behaving correctly after show() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "U1",
+      "label": "Unknown",
+      "claim": "This change does what its author and the requirement intended.",
+      "witnesses": []
+    }
+  ],
+  "tokens": {
+    "basic_ai": 11200,
+    "pipeline": 411
+  },
+  "error": null
+}

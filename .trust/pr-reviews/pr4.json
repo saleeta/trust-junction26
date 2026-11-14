@@ -1,0 +1,78 @@
+{
+  "pr": 4,
+  "base": "64e9721",
+  "head": "4088340",
+  "title": "Blast-radius engine, graph retrieval, LLM cost arms, one-command demo\n",
+  "direction": "The differentiator - blast-radius engine, graph retrieval, LLM cost arms and the one-command demo.",
+  "claims": [
+    {
+      "id": "G1",
+      "label": "Refuted",
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "witnesses": [
+        {
+          "s": "AssumptionClass"
+        }
+      ]
+    },
+    {
+      "id": "H1",
+      "label": "Unknown",
+      "claim": ".trust/repro/2297/README.md:31 says: \"- Not a complaint about the whole change. The same agent updated all six\"",
+      "witnesses": []
+    },
+    {
+      "id": "H2",
+      "label": "Unknown",
+      "claim": ".trust/repro/2297/README.md:33 says: \"sync. Only the target-framework conditionality is wrong.\"",
+      "witnesses": []
+    },
+    {
+      "id": "K1",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2129.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K2",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2234.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K3",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2283.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K4",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/ab/2297.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K5",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/bases.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K6",
+      "label": "Unknown",
+      "claim": "<module>() in .trust/findings/2297-blast.json keeps behaving correctly after changed() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "U1",
+      "label": "Unknown",
+      "claim": "This change does what its author and the requirement intended.",
+      "witnesses": []
+    }
+  ],
+  "tokens": {
+    "basic_ai": 36580,
+    "pipeline": 379
+  },
+  "error": null
+}

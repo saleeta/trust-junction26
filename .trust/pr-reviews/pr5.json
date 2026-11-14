@@ -1,0 +1,42 @@
+{
+  "pr": 5,
+  "base": "pr4",
+  "head": "pr5",
+  "title": "PR #5: cap total discount at 100% (human-approved fix)\n",
+  "direction": "Completed outcome - the corrected sample that re-ran the checkers and was accepted by the named engineer.",
+  "claims": [
+    {
+      "id": "G1",
+      "label": "Refuted",
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "witnesses": [
+        {
+          "s": "final_price"
+        }
+      ]
+    },
+    {
+      "id": "K1",
+      "label": "Unknown",
+      "claim": "checkout() in shop/checkout.py keeps behaving correctly after final_price() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "K2",
+      "label": "Unknown",
+      "claim": "post_sale() in shop/ledger.py keeps behaving correctly after final_price() changed.",
+      "witnesses": []
+    },
+    {
+      "id": "U1",
+      "label": "Unknown",
+      "claim": "This change does what its author and the requirement intended.",
+      "witnesses": []
+    }
+  ],
+  "tokens": {
+    "basic_ai": 272,
+    "pipeline": 145
+  },
+  "error": null
+}
