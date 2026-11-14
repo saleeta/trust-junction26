@@ -1,6 +1,14 @@
 # Two-minute stage presentation
 
-Open [demo/review-2297.html](demo/review-2297.html) before the timer starts.
+Open [demo/presentation.html](demo/presentation.html) before the timer starts.
+It is a self-contained interactive deck built from the pipeline's real
+artifacts: arrow keys navigate, click assumption cards to expand, click a
+command line to copy it. If the artifacts are stale, rebuild first:
+
+```bash
+python present.py            # runs the pipeline if needed, then builds the deck
+```
+
 Keep [DEMO.md](DEMO.md) for questions; do not run the seven-beat pipeline on stage.
 
 | Time | Screen and narration |

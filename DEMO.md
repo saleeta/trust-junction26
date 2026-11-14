@@ -1,9 +1,12 @@
 # DEMO — technical backup walkthrough
 
 For the two-minute presentation, use [TWO_MINUTE_DEMO.md](TWO_MINUTE_DEMO.md)
-and the generated review receipt. This document is an extended technical
-walkthrough. Saved measurements below came from particular environments; rerun
-before quoting numbers. `--dry-run` measures context size, not finding quality.
+and the interactive deck (`python present.py` → `demo/presentation.html`:
+arrow keys, clickable assumption cards, copyable commands, before/after
+token bars, built entirely from pipeline artifacts). This document is an
+extended technical walkthrough. Saved measurements below came from particular
+environments; rerun before quoting numbers. `--dry-run` measures context size,
+not finding quality.
 
 Every command below has been run on this machine. One command runs it all:
 
