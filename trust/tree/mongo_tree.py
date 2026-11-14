@@ -82,6 +82,13 @@ def build_docs(tree: dict, tree_name: str) -> tuple[list[dict], list[dict]]:
             walk(c, node["id"])
 
     walk(tree, None)
+    seen: set[str] = set()
+    for n in nodes:
+        if n["_id"] in seen:
+            raise ValueError(
+                f"duplicate tree node id {n['_id']!r} - node ids must be "
+                "unique before they become Mongo _id values")
+        seen.add(n["_id"])
     return nodes, edges
 
 
@@ -120,36 +127,51 @@ class AtlasTree:
 
     # -- the two traversal primitives ---------------------------------------
     def path_to_root(self, node_id: str) -> list[dict]:
-        """$graphLookup walking child->parent along the `contains` edges.
+        """$graphLookup walking child->parent along the `contains` edges,
+        hydrated back to node documents with $lookup.
 
-        The result is the actual lookup path, with `depth` attached by Mongo.
+        Semantics: `connectToField` is MATCHED against the current value and
+        `connectFromField` is where the traversal CONTINUES.
         """
         pipeline = [
             {"$match": {"_id": node_id}},
             {"$graphLookup": {
                 "from": "edges",
                 "startWith": "$_id",
-                "connectFromField": "to_id",     # current node is the child
-                "connectToField": "from_id",     # jump to its parent
-                "as": "ancestors",
+                "connectFromField": "from_id",     # continue to the parent
+                "connectToField": "to_id",         # match the current child
+                "as": "ancestor_edges",
                 "depthField": "depth",
                 "maxDepth": 50,
             }},
+            {"$unwind": {"path": "$ancestor_edges",
+                         "preserveNullAndEmptyArrays": True}},
+            {"$lookup": {"from": "nodes",
+                         "localField": "ancestor_edges.from_id",
+                         "foreignField": "_id", "as": "node"}},
+            {"$unwind": {"path": "$node", "preserveNullAndEmptyArrays": True}},
+            {"$project": {"_id": 0, "node": "$node",
+                          "depth": "$ancestor_edges.depth"}},
         ]
         rows = list(self.nodes.aggregate(pipeline))
         if not rows:
             return []
-        row = rows[0]
-        path = [{"node_id": node_id, "depth": 0,
-                 "label": row.get("label"), "kind": row.get("kind"),
-                 "tokens": row.get("tokens", 0)}]
-        for a in sorted(row.get("ancestors", []),
-                        key=lambda x: x.get("depth", 0)):
-            path.append({"node_id": a["_id"], "depth": a.get("depth", 0),
-                         "label": a.get("label"), "kind": a.get("kind"),
-                         "tokens": a.get("tokens", 0)})
-        path.sort(key=lambda p: p["depth"], reverse=True)   # root first
-        return path
+        # the start node itself
+        start = self.nodes.find_one({"_id": node_id})
+        if not start:
+            return []
+        parents = [{"node_id": r["node"]["_id"], "depth": r.get("depth") or 0,
+                    "label": r["node"].get("label"),
+                    "kind": r["node"].get("kind"),
+                    "tokens": r["node"].get("tokens", 0)}
+                   for r in sorted((r for r in rows if r.get("node")),
+                                   key=lambda r: r.get("depth") or 0,
+                                   reverse=True)]           # root first
+        parents.append({"node_id": start["_id"],
+                        "depth": (parents[0]["depth"] + 1) if parents else 0,
+                        "label": start.get("label"), "kind": start.get("kind"),
+                        "tokens": start.get("tokens", 0)})  # entry last
+        return parents
 
     def descendants(self, node_id: str) -> list[dict]:
         """$graphLookup walking parent->child: the blast radius as traversal."""
@@ -158,24 +180,36 @@ class AtlasTree:
             {"$graphLookup": {
                 "from": "edges",
                 "startWith": "$_id",
-                "connectFromField": "from_id",     # current node is the parent
-                "connectToField": "to_id",         # jump to its children
-                "as": "subtree",
+                "connectFromField": "to_id",         # continue to the children
+                "connectToField": "from_id",         # match the current parent
+                "as": "child_edges",
                 "depthField": "depth",
                 "maxDepth": 50,
             }},
+            {"$unwind": {"path": "$child_edges",
+                         "preserveNullAndEmptyArrays": True}},
+            {"$lookup": {"from": "nodes",
+                         "localField": "child_edges.to_id",
+                         "foreignField": "_id", "as": "node"}},
+            {"$unwind": {"path": "$node", "preserveNullAndEmptyArrays": True}},
+            {"$project": {"_id": 0, "node": "$node",
+                          "depth": "$child_edges.depth"}},
         ]
         rows = list(self.nodes.aggregate(pipeline))
         if not rows:
             return []
-        row = rows[0]
-        out = [{"node_id": node_id, "depth": 0, "label": row.get("label"),
-                "kind": row.get("kind"), "tokens": row.get("tokens", 0)}]
-        for a in sorted(row.get("subtree", []),
-                        key=lambda x: x.get("depth", 0)):
-            out.append({"node_id": a["_id"], "depth": a.get("depth", 0),
-                        "label": a.get("label"), "kind": a.get("kind"),
-                        "tokens": a.get("tokens", 0)})
+        start = self.nodes.find_one({"_id": node_id})
+        if not start:
+            return []
+        out = [{"node_id": start["_id"], "depth": 0,
+                "label": start.get("label"), "kind": start.get("kind"),
+                "tokens": start.get("tokens", 0)}]
+        for r in sorted((r for r in rows if r.get("node")),
+                        key=lambda r: r.get("depth") or 0):
+            n = r["node"]
+            out.append({"node_id": n["_id"], "depth": r.get("depth") or 0,
+                        "label": n.get("label"), "kind": n.get("kind"),
+                        "tokens": n.get("tokens", 0)})
         return out
 
     # -- entry point ---------------------------------------------------------

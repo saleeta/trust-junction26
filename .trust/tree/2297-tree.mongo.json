@@ -1,0 +1,1553 @@
+{
+  "branch": "origin/ju26-issue-2297",
+  "base": "32258fdb",
+  "backend": "mongodb-atlas::trust_demo",
+  "tree": {
+    "id": "review:origin/ju26-issue-2297",
+    "label": "origin/ju26-issue-2297",
+    "kind": "review",
+    "detail": "",
+    "tokens": 8,
+    "falsified": false,
+    "provenance": {},
+    "children": [
+      {
+        "id": "issue",
+        "label": "issue text (1457 chars)",
+        "kind": "issue",
+        "detail": "# Issue #2297: Add ExcludeFromCodeCoverage attribute to generated code.\nOpened by SergeyBarskiyTyler, 2026-09-11. State: open.\n\n## Is your feature request related to a problem? Please describe.\nMessagePack generated code is not decorated with ExcludeFromCodeCoverage\nattribute. Writing good coverage for generated MessagePack code is very hard,\nwhich may skew coverage numbers, especially on large projects with a lot of\ngenerated code.\n\n## Describe the solution you'd like\nI would like all generated code to be decorated with ExcludeFromCodeCoverage\nattribute. I do not feel like a setting is needed, but setting would be fine to\nhave too.\n\n## Describe alternatives you've considered\nThere are no alternatives. Good coverage of generated code is close to\nimpossible because it covers many edge cases.\n\n## Additional context\nN/A\n\n## Comments\n1. b-kurczynski-dl (2026-10-20): same issue; suggests excluding generated files\n   in dotnet-coverage settings via a Sources/Exclude regex `obj\\.*\\.g\\.cs$`.\n2. armadavalor (2026-10-25): offers a PR adding\n   [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] and\n   possibly [global::System.CodeDom.Compiler.GeneratedCode(...)] to types\n   emitted by templates under src/MessagePack.SourceGenerator/Transforms/\n   (formatters, string-key formatters, enum/union formatters, resolvers), with\n   updated verified snapshots. \"No setting.\" Asks AArnott for a decision.\n   No maintainer reply on the page.\n",
+        "tokens": 348,
+        "falsified": false,
+        "provenance": {
+          "source": "issue tracker"
+        },
+        "children": []
+      },
+      {
+        "id": "diff",
+        "label": "diff 32258fdb..origin/ju26-issue-2297 (237 files)",
+        "kind": "diff-branch",
+        "detail": "",
+        "tokens": 18,
+        "falsified": false,
+        "provenance": {},
+        "children": [
+          {
+            "id": "file:README.md",
+            "label": "README.md",
+            "kind": "file",
+            "detail": "",
+            "tokens": 2,
+            "falsified": false,
+            "provenance": {
+              "path": "README.md",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- README.md"
+            },
+            "children": [
+              {
+                "id": "hunk:README.md",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/README.md b/README.md\nindex c52f1088..b09bde25 100644\n--- a/README.md\n+++ b/README.md\n@@ -1636,6 +1636,9 @@ Two assembly-level attributes exist to help with mixing in your own custom forma\n \n Learn more about using a mix of your own custom formatters and automatically generated ones in [the Analyzer section](#analyzer).\n \n+All generated formatters and resolvers are decorated with `[ExcludeFromCodeCoverage]`, so generated code does not skew code coverage reports.\n+The attribute is only emitted for targets where it is available (not `netstandard2.0` or .NET Framework).\n+\n ### MagicOnion\n \n [MagicOnion](https://github.com/Cysharp/MagicOnion) is a code-first gRPC framework based on grpc-dotnet and MessagePack. gRPC usually communicates with Protocol Buffers using IDL. But MagicOnion uses MessagePack for C# and does not need IDL. When communicating C# to C#, schemaless (or rather C# classes as schema) is better than using IDL.\n",
+                "tokens": 244,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 14,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs\nindex 23ef5d1b..deb8e811 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs\n@@ -24,7 +24,7 @@ namespace MessagePack.SourceGenerator.Transforms\n         {\n             this.Write(\"\\r\\nusing MsgPack = global::MessagePack;\\r\\n\\r\\n\");\n  using (TransformUtilities.EmitNestingTypesAndNamespaces(this.ResolverName, this.Write)) { \n-            this.Write(\"\\r\\npartial class \");\n+            this.Write(\"\\r\\n#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\npartial class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(ResolverName.Name));\n             this.Write(\" : MsgPack::IFormatterResolver\\r\\n{\\r\\n\\tpublic static readonly \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(ResolverName.Name));\n@@ -53,6 +53,9 @@ namespace MessagePack.SourceGenerator.Transforms\n \t\treturn FormatterCache<T>.Formatter;\n \t}\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tstatic class FormatterCache<T>\n \t{\n \t\tinternal static readonly MsgPack::Formatters.IMessagePackFormatter<T> Formatter;\n",
+                "tokens": 341,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 14,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt\nindex 6e44be11..6242707c 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt\n@@ -4,6 +4,9 @@ using MsgPack = global::MessagePack;\n \n <# using (TransformUtilities.EmitNestingTypesAndNamespaces(this.ResolverName, this.Write)) { #>\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n partial class <#= ResolverName.Name #> : MsgPack::IFormatterResolver\n {\n \tpublic static readonly <#= ResolverName.Name #> Instance = new <#= ResolverName.Name #>();\n@@ -29,6 +32,9 @@ partial class <#= ResolverName.Name #> : MsgPack::IFormatterResolver\n \t\treturn FormatterCache<T>.Formatter;\n \t}\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tstatic class FormatterCache<T>\n \t{\n \t\tinternal static readonly MsgPack::Formatters.IMessagePackFormatter<T> Formatter;\n",
+                "tokens": 299,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs\nindex dd57a94c..7a63be31 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs\n@@ -24,7 +24,7 @@ namespace MessagePack.SourceGenerator.Transforms\n         {\n             this.Write(\"\\r\\nusing MsgPack = global::MessagePack;\\r\\n\\r\\n\");\n  using (this.EmitNestingTypesAndNamespaces(this.Write)) { \n-            this.Write(\"\\r\\n\\tinternal sealed class \");\n+            this.Write(\"\\r\\n#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n\\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\n\\tinternal sealed class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.Formatter.Name));\n             this.Write(\" : MsgPack::Formatters.IMessagePackFormatter<\");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.DataType.GetQualifiedName()));\n",
+                "tokens": 241,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt\nindex 11ebf077..7cc5835a 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt\n@@ -5,6 +5,9 @@ using MsgPack = global::MessagePack;\n \n <# using (this.EmitNestingTypesAndNamespaces(this.Write)) { #>\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tinternal sealed class <#= Info.Formatter.Name #> : MsgPack::Formatters.IMessagePackFormatter<<#= Info.DataType.GetQualifiedName() #>>\n \t{\n \t\tpublic void Serialize(ref MsgPack::MessagePackWriter writer, <#= Info.DataType.GetQualifiedName() #> value, MsgPack::MessagePackSerializerOptions options)\n",
+                "tokens": 220,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs\nindex 05b30737..4a19b0fd 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs\n@@ -30,7 +30,7 @@ namespace MessagePack.SourceGenerator.Transforms\n  using (this.EmitNestingTypesAndNamespaces(this.Write)) { \n             this.Write(\"\\r\\n\");\n   bool isFormatterResolverNecessary = GeneratorUtilities.ShouldUseFormatterResolver(Info.Members);\n-            this.Write(\"\\tinternal sealed class \");\n+            this.Write(\"#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n\\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\n\\tinternal sealed class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.Formatter.GetQualifiedName(Qualifiers.None)));\n             this.Write(\" : MsgPack::Formatters.IMessagePackFormatter<\");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.DataType.GetQualifiedName(genericStyle: GenericParameterStyle.Identifiers)));\n",
+                "tokens": 256,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt\nindex 2bd9a8a6..d09094bb 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt\n@@ -11,6 +11,9 @@ using MsgPack = global::MessagePack;\n <# using (this.EmitNestingTypesAndNamespaces(this.Write)) { #>\n \n <#  bool isFormatterResolverNecessary = GeneratorUtilities.ShouldUseFormatterResolver(Info.Members);#>\n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tinternal sealed class <#= Info.Formatter.GetQualifiedName(Qualifiers.None) #> : MsgPack::Formatters.IMessagePackFormatter<<#= Info.DataType.GetQualifiedName(genericStyle: GenericParameterStyle.Identifiers) #>>\n <# TransformUtilities.EmitTypeConstraints(Info.Formatter, this.Write); #>\n \t{\n",
+                "tokens": 242,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs\nindex 96a15822..de4b0ece 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs\n@@ -35,7 +35,7 @@ namespace MessagePack.SourceGenerator.Transforms\n             this.Write(\")]\\r\\n\\r\\n\");\n  using (TransformUtilities.EmitNestingTypesAndNamespaces(this.ResolverName, this.Write)) { \n             this.Write(\"\\r\\n/// <summary>A MessagePack resolver that uses generated formatters for types in\" +\n-                    \" this assembly.</summary>\\r\\npartial class \");\n+                    \" this assembly.</summary>\\r\\n#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\npartial class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(ResolverName.Name));\n             this.Write(\" : MsgPack::IFormatterResolver\\r\\n{\\r\\n\\t/// <summary>An instance of this resolver tha\" +\n                     \"t only returns formatters specifically generated for types in this assembly.</su\" +\n@@ -52,6 +52,9 @@ namespace MessagePack.SourceGenerator.Transforms\n \t\treturn FormatterCache<T>.Formatter;\n \t}\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tprivate static class FormatterCache<T>\n \t{\n \t\tinternal static readonly MsgPack::Formatters.IMessagePackFormatter<T> Formatter;\n@@ -61,7 +64,7 @@ namespace MessagePack.SourceGenerator.Tran",
+                "tokens": 592,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt\nindex 4a816aa9..792c4b24 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt\n@@ -11,6 +11,9 @@ using MsgPack = global::MessagePack;\n <# using (TransformUtilities.EmitNestingTypesAndNamespaces(this.ResolverName, this.Write)) { #>\n \n /// <summary>A MessagePack resolver that uses generated formatters for types in this assembly.</summary>\n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n partial class <#= ResolverName.Name #> : MsgPack::IFormatterResolver\n {\n \t/// <summary>An instance of this resolver that only returns formatters specifically generated for types in this assembly.</summary>\n@@ -25,6 +28,9 @@ partial class <#= ResolverName.Name #> : MsgPack::IFormatterResolver\n \t\treturn FormatterCache<T>.Formatter;\n \t}\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tprivate static class FormatterCache<T>\n \t{\n \t\tinternal static readonly MsgPack::Formatters.IMessagePackFormatter<T> Formatter;\n@@ -39,6 +45,9 @@ partial class <#= ResolverName.Name #> : MsgPack::IFormatterResolver\n \t\t}\n \t}\n \n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tprivate static class <#= ResolverName.Name #>GetFormatterHelper\n \t{\n <#\n",
+                "tokens": 406,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 16,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs\nindex 640b6e99..f6c97140 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs\n@@ -34,7 +34,7 @@ namespace MessagePack.SourceGenerator.Transforms\n \n \tbool isFormatterResolverNecessary = GeneratorUtilities.ShouldUseFormatterResolver(Info.Members); \n  using (this.EmitNestingTypesAndNamespaces(this.Write)) { \n-            this.Write(\"\\tinternal sealed class \");\n+            this.Write(\"#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n\\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\n\\tinternal sealed class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.Formatter.GetQualifiedName(Qualifiers.None)));\n             this.Write(\" : global::MessagePack.Formatters.IMessagePackFormatter<\");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.DataType.GetQualifiedName()));\n",
+                "tokens": 253,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 16,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt\nindex c81a3c37..db3f36f3 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt\n@@ -15,6 +15,9 @@ using MsgPack = global::MessagePack;\n \n \tbool isFormatterResolverNecessary = GeneratorUtilities.ShouldUseFormatterResolver(Info.Members); #>\n <# using (this.EmitNestingTypesAndNamespaces(this.Write)) { #>\n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tinternal sealed class <#= Info.Formatter.GetQualifiedName(Qualifiers.None) #> : global::MessagePack.Formatters.IMessagePackFormatter<<#= Info.DataType.GetQualifiedName() #>>\n <# TransformUtilities.EmitTypeConstraints(Info.Formatter, this.Write); #>\n \t{\n",
+                "tokens": 243,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs b/src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs\nindex 78518831..a7aa265a 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs\n@@ -55,7 +55,7 @@ internal static class TransformUtilities\n                 writer($\"partial {kind} {nestingType.GetQualifiedName(Qualifiers.None, GenericParameterStyle.Identifiers)}\");\n                 bool anyConstraints = EmitTypeConstraints(nestingType, writer, leadingLineFeedIfAny: true);\n \n-                writer(anyConstraints ? \"{\" : \" {\\r\\n\");\n+                writer(anyConstraints ? \"{\\r\\n\" : \" {\\r\\n\");\n                 reverseAction.Push(new DisposeAction(() => writer(\"}\\r\\n\")));\n \n                 return new DisposeAction(() =>\n",
+                "tokens": 200,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+            "label": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs b/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs\nindex 12ce6a29..944fb34b 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs\n+++ b/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs\n@@ -27,7 +27,7 @@ namespace MessagePack.SourceGenerator.Transforms\n         {\n             this.Write(\"\\r\\nusing MsgPack = global::MessagePack;\\r\\n\\r\\n\");\n  using (this.EmitNestingTypesAndNamespaces(this.Write)) { \n-            this.Write(\"\\tinternal sealed class \");\n+            this.Write(\"#if !NETSTANDARD2_0 && !NETFRAMEWORK\\r\\n\\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\\r\\n#endif\\r\\n\\tinternal sealed class \");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.Formatter.GetQualifiedName(Qualifiers.None)));\n             this.Write(\": MsgPack::Formatters.IMessagePackFormatter<\");\n             this.Write(this.ToStringHelper.ToStringWithCulture(Info.DataType.GetQualifiedName()));\n",
+                "tokens": 241,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+            "label": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+            "kind": "file",
+            "detail": "",
+            "tokens": 13,
+            "falsified": false,
+            "provenance": {
+              "path": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt"
+            },
+            "children": [
+              {
+                "id": "hunk:src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt b/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt\nindex 67b78a53..7408b66f 100644\n--- a/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt\n+++ b/src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt\n@@ -7,6 +7,9 @@\n using MsgPack = global::MessagePack;\n \n <# using (this.EmitNestingTypesAndNamespaces(this.Write)) { #>\n+#if !NETSTANDARD2_0 && !NETFRAMEWORK\n+\t[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\n+#endif\n \tinternal sealed class <#= Info.Formatter.GetQualifiedName(Qualifiers.None) #>: MsgPack::Formatters.IMessagePackFormatter<<#= Info.DataType.GetQualifiedName() #>>\n \t{\n \t\tprivate readonly global::System.Collections.Generic.Dictionary<global::System.RuntimeTypeHandle, global::System.Collections.Generic.KeyValuePair<int, int>> typeToKeyAndJumpMap;\n",
+                "tokens": 227,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "file:tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs",
+            "label": "tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs",
+            "kind": "file",
+            "detail": "",
+            "tokens": 14,
+            "falsified": false,
+            "provenance": {
+              "path": "tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs",
+              "verify": "git diff 32258fdb..origin/ju26-issue-2297 -- tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs"
+            },
+            "children": [
+              {
+                "id": "hunk:tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs",
+                "label": "diff hunk",
+                "kind": "hunk",
+                "detail": "diff --git a/tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs b/tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs\nnew file mode 100644\nindex 00000000..84045c55\n--- /dev/null\n+++ b/tests/MessagePack.SourceGenerator.Tests/CodeCoverageExclusionTests.cs\n@@ -0,0 +1,130 @@\n+// Copyright (c) All contributors. All rights reserved.\n+// Licensed under the MIT license. See LICENSE file in the project root for full license information.\n+\n+using MessagePack.SourceGenerator;\n+using MessagePack.SourceGenerator.Tests;\n+using Microsoft.CodeAnalysis;\n+using Microsoft.CodeAnalysis.CSharp;\n+using Microsoft.CodeAnalysis.Testing;\n+\n+/// <summary>\n+/// Verifies that every type emitted by the source generator is decorated with <c>ExcludeFromCodeCoverage</c>\n+/// (see https://github.com/MessagePack-CSharp/MessagePack-CSharp/issues/2297).\n+/// </summary>\n+public class CodeCoverageExclusionTests\n+{\n+    private const string ExcludeAttribute = \"[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]\";\n+\n+    // The attribute is not available on netstandard2.0 or .NET Framework, so it is only emitted where it exists.\n+    private const string Guard = \"#if !NETSTANDARD2_0 && !NETFRAMEWORK\";\n+\n+    private const string TestSource = \"\"\"\n+        using MessagePack;\n+\n+        [MessagePackObject]\n+        public class MyObject\n+        {\n+            [Key(0)]\n+            public int Value { get; set; }\n+        }\n+\n+        [MessagePackObject(keyAsPropertyName: true)]\n+        public class MyStringKeyObject\n+        {\n+            public string Name { get; ",
+                "tokens": 1189,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "generated",
+            "label": "generated bulk (222)",
+            "kind": "generated",
+            "detail": "222 generated/snapshot files changed, e.g. tests/MessagePack.SourceGenerator.Tests/Resources/AdditionalAllowTypes/Formatters.MessagePack.GeneratedMessagePackResolver.TypeWithAutoGeneratedFormatterFormatter.g.cs, tests/MessagePack.SourceGenerator.Tests/Resources/AdditionalAllowTypes/MessagePack.GeneratedMessagePackResolver.g.cs, tests/MessagePack.SourceGenerator.Tests/Resources/AdditionalFormatterTypes/DefiningProject.MessagePack.GeneratedMessagePackResolver.g.cs, tests/MessagePack.SourceGenerator.Tests/Resources/AdditionalFormatterTypes/TestProject.Formatters.MessagePack.GeneratedMessagePackResolver.TypeWithAutoGeneratedFormatterFormatter.g.cs, tests/MessagePack.SourceGenerator.Tests/Resources/AdditionalFormatterTypes/TestProject.MessagePack.GeneratedMessagePackResolver.g.cs",
+            "tokens": 144,
+            "falsified": false,
+            "provenance": {
+              "count": 222,
+              "verify": "git diff --name-only 32258fdb..origin/ju26-issue-2297"
+            },
+            "children": []
+          }
+        ]
+      },
+      {
+        "id": "assumptions",
+        "label": "assumption ledger (4 harvested)",
+        "kind": "assumption-branch",
+        "detail": "",
+        "tokens": 7,
+        "falsified": false,
+        "provenance": {},
+        "children": [
+          {
+            "id": "assumption:tfm-guard-0",
+            "label": "tfm-guard-0",
+            "kind": "assumption",
+            "detail": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage is unavailable on net472, netstandard2.0, and excluding them is acceptable",
+            "tokens": 30,
+            "falsified": true,
+            "provenance": {
+              "verdict": "FALSIFIED",
+              "source_kind": "implicit_in_code",
+              "source_ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs  #if !NETSTANDARD2_0 && !NETFRAMEWORK",
+              "severity": "moderate",
+              "verify": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo"
+            },
+            "children": [
+              {
+                "id": "assumption:tfm-guard-0:ev:0",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change",
+                "tokens": 31,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:ev:1",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the premise is false",
+                "tokens": 28,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:ev:2",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "the originating issue does not mention target frameworks - the conditionality was not requested",
+                "tokens": 17,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:0",
+                "label": "site: target_framework net472",
+                "kind": "site",
+                "detail": "shipped by the library but excluded by the guard",
+                "tokens": 16,
+                "falsified": false,
+                "provenance": {
+                  "kind": "target_framework",
+                  "ref": "net472",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:1",
+                "label": "site: target_framework netstandard2.0",
+                "kind": "site",
+                "detail": "shipped by the library but excluded by the guard",
+                "tokens": 19,
+                "falsified": false,
+                "provenance": {
+                  "kind": "target_framework",
+                  "ref": "netstandard2.0",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:2",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 24,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:3",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:4",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:5",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:6",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 26,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:7",
+                "label": "site: template src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+                "kind": "site",
+                "detail": "emits the guarded code into consumers",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "template",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:site:8",
+                "label": "site: snapshot 222 verified snapshots",
+                "kind": "site",
+                "detail": "regenerated WITH the guard, so the tests now assert the guarded output is correct",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "snapshot",
+                  "ref": "222 verified snapshots",
+                  "count": 222
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tfm-net472",
+                "label": "feature_absent_on_target",
+                "kind": "hypothesis",
+                "detail": "the guard removes System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage for net472, which the library ships; the issue asked for it unconditionally expected: code generated for net472 contains no System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+                "tokens": 127,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "differential",
+                  "priority": 3.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tfm-netstandard2.0",
+                "label": "feature_absent_on_target",
+                "kind": "hypothesis",
+                "detail": "the guard removes System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage for netstandard2.0, which the library ships; the issue asked for it unconditionally expected: code generated for netstandard2.0 contains no System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+                "tokens": 139,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "differential",
+                  "priority": 3.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-snapshot",
+                "label": "test_codifies_the_gap",
+                "kind": "hypothesis",
+                "detail": "the verified snapshots were regenerated with the guard, so snapshot tests assert the narrowed output is correct and can never fail on it expected: removing the guard makes snapshot tests fail, proving they pin the gap",
+                "tokens": 121,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 2.5,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-CompositeResolverTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 117,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-EnumTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 115,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-FormatterTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 115,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-ResolverTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 115,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-StringKeyFormatterTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 120,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-UnionTemplate.tt",
+                "label": "regeneration_drift",
+                "kind": "hypothesis",
+                "detail": "a future regeneration propagates the guard to every consumer of this template expected: regenerated output still carries the guard",
+                "tokens": 115,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 1.0,
+                  "status": "untested"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "assumption:documented-claim-0",
+            "label": "documented-claim-0",
+            "kind": "assumption",
+            "detail": "documentation asserts: \"The attribute is only emitted for targets where it is available (not `netstandard2.0` or .NET Framework).\"",
+            "tokens": 35,
+            "falsified": true,
+            "provenance": {
+              "verdict": "FALSIFIED",
+              "source_kind": "stated",
+              "source_ref": "README.md (added by this change)",
+              "severity": "moderate",
+              "verify": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo"
+            },
+            "children": [
+              {
+                "id": "assumption:documented-claim-0:ev:0",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "the sentence was ADDED to README.md by this change",
+                "tokens": 13,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:ev:1",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles on net472, netstandard2.0, so the documented availability constraint is factually wrong",
+                "tokens": 31,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:ev:2",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "no test reads documentation, so this claim cannot be caught by the suite",
+                "tokens": 16,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:site:0",
+                "label": "site: documentation README.md",
+                "kind": "site",
+                "detail": "ships a factually false statement to readers",
+                "tokens": 13,
+                "falsified": false,
+                "provenance": {
+                  "kind": "documentation",
+                  "ref": "README.md",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:site:1",
+                "label": "site: target_framework net472",
+                "kind": "site",
+                "detail": "named in the false claim",
+                "tokens": 11,
+                "falsified": false,
+                "provenance": {
+                  "kind": "target_framework",
+                  "ref": "net472",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:site:2",
+                "label": "site: target_framework netstandard2.0",
+                "kind": "site",
+                "detail": "named in the false claim",
+                "tokens": 14,
+                "falsified": false,
+                "provenance": {
+                  "kind": "target_framework",
+                  "ref": "netstandard2.0",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:documented-claim-0:hyp:documented-claim-0-h-doc",
+                "label": "false_documented_constraint",
+                "kind": "hypothesis",
+                "detail": "the change documents an availability limit that does not exist, which will be read as justification for the feature gap and repeated by maintainers expected: the named API compiles on the frameworks the sentence excludes",
+                "tokens": 118,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "static",
+                  "priority": 3.5,
+                  "status": "untested"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "assumption:test-observability-0",
+            "label": "test-observability-0",
+            "kind": "assumption",
+            "detail": "the existing test suite can observe this change",
+            "tokens": 14,
+            "falsified": true,
+            "provenance": {
+              "verdict": "FALSIFIED",
+              "source_kind": "derived",
+              "source_ref": "change is conditional on ['net472', 'netstandard2.0']",
+              "severity": "low",
+              "verify": "intersect excluded frameworks with test project TFMs"
+            },
+            "children": [
+              {
+                "id": "assumption:test-observability-0:ev:0",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0']. A green suite is evidence about one configuration only.",
+                "tokens": 35,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:0",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 24,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:1",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 24,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:2",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:3",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:4",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:5",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:6",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:7",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:8",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 26,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:9",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 26,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:10",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:11",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:site:12",
+                "label": "site: file src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+                "kind": "site",
+                "detail": "changed source under an untested configuration",
+                "tokens": 23,
+                "falsified": false,
+                "provenance": {
+                  "kind": "file",
+                  "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+                  "count": 1
+                },
+                "children": []
+              },
+              {
+                "id": "assumption:test-observability-0:hyp:test-observability-0-h-suite",
+                "label": "green_suite_proves_nothing",
+                "kind": "hypothesis",
+                "detail": "13 changed source file(s) are only exercised under configurations the suite does not build expected: building the excluded configuration reveals behaviour the suite never checks",
+                "tokens": 114,
+                "falsified": false,
+                "provenance": {
+                  "strategy": "differential",
+                  "priority": 2.0,
+                  "status": "untested"
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "assumption:generated-in-sync-0",
+            "label": "generated-in-sync-0",
+            "kind": "assumption",
+            "detail": "every checked-in generated .cs is the current output of the .tt template beside it",
+            "tokens": 22,
+            "falsified": false,
+            "provenance": {
+              "verdict": "SUPPORTED",
+              "source_kind": "implicit_in_code",
+              "source_ref": "17 template/output pairs",
+              "severity": "none",
+              "verify": "compare which half of each pair the diff touched"
+            },
+            "children": [
+              {
+                "id": "assumption:generated-in-sync-0:ev:0",
+                "label": "evidence",
+                "kind": "evidence",
+                "detail": "all 6 touched pair(s) changed on both sides",
+                "tokens": 13,
+                "falsified": false,
+                "provenance": {},
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "passes": [
+    {
+      "name": "lookup: why is the attribute guarded by a target framework",
+      "kind": "lookup",
+      "visits": [
+        {
+          "node_id": "review:origin/ju26-issue-2297",
+          "label": "origin/ju26-issue-2297",
+          "kind": "review",
+          "tokens": 8,
+          "revisit": false,
+          "why": "context root"
+        },
+        {
+          "node_id": "assumptions",
+          "label": "assumption ledger (4 harvested)",
+          "kind": "assumption-branch",
+          "tokens": 7,
+          "revisit": false,
+          "why": "entry point"
+        },
+        {
+          "node_id": "assumption:documented-claim-0",
+          "label": "documented-claim-0",
+          "kind": "assumption",
+          "tokens": 35,
+          "revisit": false,
+          "why": "opened on the path"
+        }
+      ],
+      "tokens": 50
+    },
+    {
+      "name": "lookup: which target frameworks do the tests cover versus the library ships",
+      "kind": "lookup",
+      "visits": [
+        {
+          "node_id": "review:origin/ju26-issue-2297",
+          "label": "origin/ju26-issue-2297",
+          "kind": "review",
+          "tokens": 8,
+          "revisit": true,
+          "why": "context root"
+        },
+        {
+          "node_id": "assumptions",
+          "label": "assumption ledger (4 harvested)",
+          "kind": "assumption-branch",
+          "tokens": 7,
+          "revisit": true,
+          "why": "opened on the path"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0",
+          "label": "tfm-guard-0",
+          "kind": "assumption",
+          "tokens": 30,
+          "revisit": false,
+          "why": "entry point"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tfm-net472",
+          "label": "feature_absent_on_target",
+          "kind": "hypothesis",
+          "tokens": 127,
+          "revisit": false,
+          "why": "opened on the path"
+        }
+      ],
+      "tokens": 172
+    },
+    {
+      "name": "propagate: assumption:tfm-guard-0",
+      "kind": "propagation",
+      "visits": [
+        {
+          "node_id": "assumption:tfm-guard-0",
+          "label": "tfm-guard-0",
+          "kind": "assumption",
+          "tokens": 30,
+          "revisit": true,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:5",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:8",
+          "label": "site: snapshot 222 verified snapshots",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-UnionTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 115,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:2",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+          "kind": "site",
+          "tokens": 24,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-CompositeResolverTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 117,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tfm-netstandard2.0",
+          "label": "feature_absent_on_target",
+          "kind": "hypothesis",
+          "tokens": 139,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-snapshot",
+          "label": "test_codifies_the_gap",
+          "kind": "hypothesis",
+          "tokens": 121,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-StringKeyFormatterTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 120,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:ev:1",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 28,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:0",
+          "label": "site: target_framework net472",
+          "kind": "site",
+          "tokens": 16,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:6",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+          "kind": "site",
+          "tokens": 26,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-EnumTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 115,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-ResolverTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 115,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:3",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tmpl-FormatterTemplate.tt",
+          "label": "regeneration_drift",
+          "kind": "hypothesis",
+          "tokens": 115,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:ev:0",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 31,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:hyp:tfm-guard-0-h-tfm-net472",
+          "label": "feature_absent_on_target",
+          "kind": "hypothesis",
+          "tokens": 127,
+          "revisit": true,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:1",
+          "label": "site: target_framework netstandard2.0",
+          "kind": "site",
+          "tokens": 19,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:ev:2",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 17,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:7",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:tfm-guard-0:site:4",
+          "label": "site: template src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        }
+      ],
+      "tokens": 1390
+    },
+    {
+      "name": "propagate: assumption:documented-claim-0",
+      "kind": "propagation",
+      "visits": [
+        {
+          "node_id": "assumption:documented-claim-0",
+          "label": "documented-claim-0",
+          "kind": "assumption",
+          "tokens": 35,
+          "revisit": true,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:ev:0",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 13,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:site:0",
+          "label": "site: documentation README.md",
+          "kind": "site",
+          "tokens": 13,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:ev:2",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 16,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:site:1",
+          "label": "site: target_framework net472",
+          "kind": "site",
+          "tokens": 11,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:site:2",
+          "label": "site: target_framework netstandard2.0",
+          "kind": "site",
+          "tokens": 14,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:ev:1",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 31,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:documented-claim-0:hyp:documented-claim-0-h-doc",
+          "label": "false_documented_constraint",
+          "kind": "hypothesis",
+          "tokens": 118,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        }
+      ],
+      "tokens": 251
+    },
+    {
+      "name": "propagate: assumption:test-observability-0",
+      "kind": "propagation",
+      "visits": [
+        {
+          "node_id": "assumption:test-observability-0",
+          "label": "test-observability-0",
+          "kind": "assumption",
+          "tokens": 14,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:9",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+          "kind": "site",
+          "tokens": 26,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:12",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:4",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:11",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:hyp:test-observability-0-h-suite",
+          "label": "green_suite_proves_nothing",
+          "kind": "hypothesis",
+          "tokens": 114,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:0",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+          "kind": "site",
+          "tokens": 24,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:5",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:1",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+          "kind": "site",
+          "tokens": 24,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:10",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:2",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:7",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:3",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:ev:0",
+          "label": "evidence",
+          "kind": "evidence",
+          "tokens": 35,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:6",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+          "kind": "site",
+          "tokens": 23,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        },
+        {
+          "node_id": "assumption:test-observability-0:site:8",
+          "label": "site: file src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+          "kind": "site",
+          "tokens": 26,
+          "revisit": false,
+          "why": "falsified claim - re-enter the tree"
+        }
+      ],
+      "tokens": 470
+    }
+  ],
+  "totals": {
+    "lookup_tokens": 222,
+    "propagation_tokens": 2111,
+    "total_tokens": 2333,
+    "nodes_visited": 48,
+    "revisits": 5,
+    "falsified_assumptions": 3
+  },
+  "baselines": {
+    "tree_nodes": 83,
+    "full_tree_dump_tokens": 8058,
+    "traditional_full_prompt_tokens": 79108,
+    "traditional_triaged_prompt_tokens": 5502,
+    "traditional_full_files": 237,
+    "traditional_triaged_files": 15,
+    "note": "traditional arms are prompt-token estimates (tiktoken cl100k_base); finding QUALITY for a live agent is not measured in dry-run mode"
+  }
+}

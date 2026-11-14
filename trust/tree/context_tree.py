@@ -177,15 +177,15 @@ def build_tree(repo: Path, base: str, branch: str, issue_text: str,
                             "source_ref": a.get("source_ref", ""),
                             "severity": b.get("severity"),
                             "verify": a.get("check_cmd", "")})
-            for ev in a.get("evidence") or []:
+            for i, ev in enumerate(a.get("evidence") or []):
                 node.children.append(TreeNode(
-                    f"{node.id}:ev", "evidence", "evidence", detail=ev,
+                    f"{node.id}:ev:{i}", "evidence", "evidence", detail=ev,
                     tokens=rc.count_tokens(ev)))
-            for s in b.get("sites") or []:
+            for i, s in enumerate(b.get("sites") or []):
                 node.children.append(TreeNode(
-                    f"{node.id}:site:{s.get('kind')}:{s.get('ref')}",
-                    f"site: {s.get('kind')} {s.get('ref')}", "site",
-                    detail=s.get("why", ""), tokens=rc.count_tokens(s.get("why", "")),
+                    f"{node.id}:site:{i}", f"site: {s.get('kind')} {s.get('ref')}",
+                    "site", detail=s.get("why", ""),
+                    tokens=rc.count_tokens(s.get("why", "")),
                     provenance={"kind": s.get("kind"), "ref": s.get("ref"),
                                 "count": s.get("count", 1)}))
             for h in b.get("hypotheses") or []:

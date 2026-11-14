@@ -78,7 +78,8 @@ def test_live_graphlookup_path_and_descendants():
     path = atlas.path_to_root("assumption:a1:site")
     assert [p["node_id"] for p in path] == ["review:x", "assumption:a1",
                                             "assumption:a1:site"], path
-    assert path[0]["depth"] == 2, "root carries the largest depth from graphLookup"
+    assert path[0]["depth"] == 1, "root is one graphLookup hop from the site"
+    assert path[2]["depth"] == 2, "the entry node carries the largest depth"
 
     sub = atlas.descendants("assumption:a1")
     assert [s["node_id"] for s in sub] == ["assumption:a1",
