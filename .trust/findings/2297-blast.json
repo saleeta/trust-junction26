@@ -9,11 +9,11 @@
       "check_cmd": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
       "verdict": "FALSIFIED",
       "evidence": [
-        "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change",
+        "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdb - introduced by this change",
         "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the premise is false",
         "the originating issue does not mention target frameworks - the conditionality was not requested"
       ],
-      "reconstructed": false
+      "reconstructed": true
     },
     "sites": [
       {
@@ -189,7 +189,7 @@
         "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles on net472, netstandard2.0, so the documented availability constraint is factually wrong",
         "no test reads documentation, so this claim cannot be caught by the suite"
       ],
-      "reconstructed": false
+      "reconstructed": true
     },
     "sites": [
       {
@@ -239,7 +239,7 @@
       "evidence": [
         "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0']. A green suite is evidence about one configuration only."
       ],
-      "reconstructed": false
+      "reconstructed": true
     },
     "sites": [
       {
@@ -349,7 +349,7 @@
       "evidence": [
         "all 6 touched pair(s) changed on both sides"
       ],
-      "reconstructed": false
+      "reconstructed": true
     },
     "sites": [],
     "hypotheses": [],

@@ -1,8 +1,22 @@
 # DEMO — runnable script
 
-Every command below has been run on this machine. Copy-paste order, ~6 minutes.
+Every command below has been run on this machine. One command runs it all:
+
+```bash
+python demo.py            # beats 0-6, ends with `dotnet test` failing (expected)
+python demo.py --quick    # skip compile probes and the repro build
+```
 
 Prerequisites: Python 3.11+, .NET 8 SDK, the target repo cloned at `./repo`.
+Note: on this machine `dotnet` is not on PATH in Git Bash; the tools fall back
+to `C:\Program Files\dotnet\dotnet.exe`. Add it to PATH before the audience
+runs `dotnet test`.
+
+The review target is not "a repository written by AI". MessagePack-CSharp is a
+human codebase (first commit 2017-02-13, 3,536 commits). The challenge input is
+the four **AI-made patches** on top of base `32258fdb` (4, 4, 28, 237 files).
+Everything below reviews the patch — the human base is the oracle that makes
+the checks possible ("did this assumption exist before the agent arrived?").
 
 ---
 
@@ -32,171 +46,168 @@ cd ..
 Base resolution is an assumption, and unrecorded assumptions are where
 hallucinations come from.
 
----
-
 ## Beat 1 — Base resolution as a checked assumption (60 s)
-
-The resolver computes the base several independent ways, refuses to pick a
-winner silently when they disagree, and validates against an external oracle —
-the challenge brief's own file counts.
 
 ```bash
 cd trust/ingest
 python base_resolver.py --repo ../../repo --all-ju26 \
-    --expect-files 2283=4,2234=4,2129=28,2297=237 \
-    --json ../../.trust/bases.json
+    --expect-files 2283=4,2234=4,2129=28,2297=237
 ```
 
-Observed output: all four branches resolve to `32258fdb`, each flagged
-`methods disagree` (reproducing the exact failure condition as a *detected*
-dispute), then confirmed by the oracle — 4, 4, 28, 237 changed files, matching
-the brief exactly.
+Observed: all four branches resolve to `32258fdb`, each flagged
+`methods disagree` (the exact failure condition, detected), then confirmed by
+the oracle — 4, 4, 28, 237 changed files, matching the brief exactly.
 
----
+## Beat 2 — Assumption ledger and blast radius (3 min)
 
-## Beat 2 — A real hidden problem in Tieto's branch (3 min)
-
-This is the centrepiece: a genuine defect in AI-authored code that **compiles,
-passes every test, and no reviewer would catch in a 237-file diff.**
+One falsified assumption yields a family of pre-aimed hypotheses, not one
+paragraph.
 
 ```bash
 cd ../assumptions
-python tfm_guard_check.py \
-    --repo ../../repo \
-    --branch origin/ju26-issue-2297 \
-    --base 32258fdb \
-    --issue-text ../../.trust/issues/2297.md \
-    --json ../../.trust/findings/2297-tfm-guard.json
+python engine.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --base 32258fdb --issue-text ../../.trust/issues/2297.md --reconstructed \
+    --json ../../.trust/findings/2297-blast.json
 ```
 
-### What it finds
+Observed: **4 assumptions harvested, 3 falsified, 1 supported.** The guard
+`#if !NETSTANDARD2_0 && !NETFRAMEWORK` around
+`ExcludeFromCodeCoverage` compiles unguarded on both excluded frameworks (the
+compatibility premise is false), the issue asked for the attribute
+unconditionally, and the change also wrote a factually false sentence into the
+README ("only emitted for targets where it is available"). Blast radius: **228
+impact sites** — 2 shipped target frameworks, 6 templates, 220 snapshots that
+now codify the gap. Severity is capped by `inflation_guard` at what the
+evidence supports: **moderate**. Nine pre-aimed hypotheses are rendered
+separately and labelled unverified.
 
-Branch `ju26-issue-2297` implements issue #2297, *"Add ExcludeFromCodeCoverage
-attribute to generated code."* The agent did most of this **well**: all six T4
-templates updated, all 222 verified snapshots regenerated consistently, `.tt`
-and generated `.cs` kept in sync. Say so — it earns the finding credibility.
+The #2297 agent did most of the job **well**: six templates updated, 222
+snapshots regenerated consistently, `.tt` and `.cs` kept in sync. Say so
+before the finding — it earns the finding credibility.
 
-But it wrapped the attribute in a guard of its own invention:
-
-```csharp
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
-    [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-#endif
-```
-
-That guard asserts an unstated assumption: *the attribute is unavailable on
-netstandard2.0 and .NET Framework.* The tool falsifies it by compiling the
-attribute, unguarded, against those exact frameworks:
-
-| Probe | Result |
-|---|---|
-| `netstandard2.0` | **COMPILES** |
-| `net472` | **COMPILES** |
-
-So the premise is false, and the consequence is a silent feature gap:
-
-| Fact | Value |
-|---|---|
-| TFMs the library ships | `netstandard2.0`, `netstandard2.1`, `net8.0`, `net472` |
-| TFMs the tests cover | `net8.0` only |
-| TFMs silently excluded | `netstandard2.0`, `net472` |
-| Test-observable | **No** |
-
-**Two of the four shipped target frameworks never receive the feature the issue
-asked for.**
-
-### Why no test catches it
-
-1. All eight test projects target `net8.0`, where the guard always passes. CI
-   never compiles the excluded path.
-2. The 222 verified snapshots were regenerated *with* the guard, so the
-   snapshot tests now assert the guarded output is correct. **The tests codify
-   the gap.**
-
-### Why it is not merely a style preference
+## Beat 3 — Graph retrieval instead of a context dump (60 s)
 
 ```bash
-cd ../../repo
-# the guard is not a repo convention - it did not exist at the base
-git grep -c 'NETSTANDARD2_0 && !NETFRAMEWORK' 32258fdb || echo "0 occurrences at base"
-# the repo's CI already consumes this attribute - the feature has a real client
-grep -n 'ExcludeFromCodeCoverageAttribute' azure-pipelines/test.runsettings
-cd ..
+cd ../memory
+python recall.py --rebuild --db ../../.trust/memory.db --repo ../../repo \
+    --base 32258fdb --branch origin/ju26-issue-2297 \
+    --ledger ../../.trust/findings/2297-blast.json \
+    --graph ../session_graph/session_graph.json \
+    --issue ../../.trust/issues/2297.md \
+    --budget 1200 --query "why is the attribute guarded by a target framework"
 ```
 
-And the issue text (`.trust/issues/2297.md`) settles intent. The request:
-*"I would like all generated code to be decorated with ExcludeFromCodeCoverage
-attribute."* Unconditional. **Neither the issue nor either of its two comments
-mentions any target framework.** The conditionality came from the implementer,
-not the request.
+Observed: 91 evidence rows (13,050 tokens dumped whole). The question is
+answered in **1,195/1,200 tokens (91% saved)**, every hit carrying a citation
+and a verify command. Retrieval is the mechanism behind "pull in only what it
+needs".
 
-### Verify it yourself — the whole point
-
-The tool keeps its probe projects on disk precisely so this works:
+## Beat 4 — What context actually costs a model (30 s)
 
 ```bash
-dotnet build ".trust/probes/origin_ju26-issue-2297/probe_netstandard2_0/p.csproj" -v q --nologo
-# Build succeeded.  0 Error(s)
+cd ../ab
+python llm_arm.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --base 32258fdb --db ../../.trust/memory.db --dry-run \
+    --issue ../../.trust/issues/2297.md
 ```
 
-Nothing above is taken on the reviewer's word.
+Observed on the 237-file diff: full dump **79,250** prompt tokens →
+full-triaged **5,644** (the fair baseline: a competent reviewer drops generated
+files first) → recall **2,529** with citations. **96.8% under the naive
+baseline, 55.2% under the fair one.** On a 4-file diff (ju26-re-2283) recall
+saves only 23.6% — the fixed costs dominate. The claim scales with the diff,
+and we say so. Token counts are tiktoken cl100k_base estimates; ratios are
+reliable, absolutes approximate.
 
-### It does not cry wolf
+## Beat 5 — A/B: the same reviewer, with and without the capsule (30 s)
 
 ```bash
-cd trust/assumptions
-for b in 2283 2234 2129; do
-  python tfm_guard_check.py --repo ../../repo --branch origin/ju26-issue-$b --base 32258fdb
-done
-# "no introduced target-framework guards in this diff"  x3
+python run_ab.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --issue ../../.trust/issues/2297.md --expect-files 237
 ```
+
+Observed: Arm A (no capsule) resolves the wrong base and produces **1 false
+finding** (50% precision). Arm B (capsule) resolves the oracle-checked base,
+finds the **test-invisible feature gap**, 100% precision. Both arms share the
+verification stage; neither grades itself. Arm B loads more *bytes* for these
+deterministic analyzers, and the tool prints that loss itself — the
+"more context, fewer tokens" claim is only made where measured (Beat 4), never
+where disproved.
+
+## Beat 6 — You run it, not us (30 s)
+
+```bash
+cd ../repro
+python make_repro.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --ledger ../../.trust/findings/2297-blast.json \
+    --out ../../.trust/repro/2297 --run
+# Audience:  cd .trust/repro/2297 && dotnet test
+```
+
+Observed: **Failed: 2, Passed: 1** — the two defect assertions fail while the
+defect exists, the sanity assertion passes so the suite cannot succeed
+vacuously.
 
 ---
 
-## Beat 3 — Ask any line why it exists (90 s)
+## The re-enactment experiment (the agent-context question)
 
-With the author's session captured, the repo becomes interrogable per line.
+Tieto did not ship the authoring sessions, so **the authentic agent context for
+their four branches is unrecoverable** — every assumption checked on them is
+read off what was committed (a guard in code, a sentence in the README), and is
+labelled `reconstructed`.
 
-```bash
-cd ../session_graph
-python why_lines.py --list
-python why_lines.py --file build_graph.py --line 592
-```
-
-Returns the exact edit, its timestamp and transcript uuid, the stated reason,
-what triggered it, and which human request it serves — plus
-`replay matches disk exactly - attribution is complete`.
-
-**State the limit out loud:** `L4 PRIVATE` is unavailable. Claude Code stores
-`thinking` blocks with empty text and a signature only (36 blocks, 0 characters
-in this session). We recover what the agent *recorded*, not what it privately
-reasoned. So the question answered is *"what reason was recorded for this line,
-and does it hold up?"* — which is auditable — not *"what truly caused it?"*,
-which is not.
-
-Then show it refusing to over-claim:
+To measure what recorded context is worth when it *does* exist, we run a
+controlled re-enactment on issue #2283 (the 4-file patch):
 
 ```bash
-python why_lines.py --file ../../DESIGN.md --all
+# 1. isolated worktree at the base, branch ju26-re-2283
+git -C repo worktree add ../re2283 -b ju26-re-2283 32258fdb
+
+# 2. an instrumented session implements the fix; its transcript is converted
+#    deterministically (deepcode harness -> Claude Code format) and graphed
+cd trust/session_graph
+python deepcode_convert.py \
+    ~/.deepcode/projects/d-work-big-hackathon/<session>.jsonl \
+    ../../.trust/capsules/re2283-session.claude.jsonl
+python build_graph.py --session ../../.trust/capsules/re2283-session.claude.jsonl \
+    --repo ../../repo --out ../../.trust/capsules/re2283-capsule.json \
+    --html ../../.trust/capsules/re2283-capsule.html
+
+# 3. per-line provenance on the patch, seeded from the pre-edit revision
+python why_lines.py --session ../../.trust/capsules/re2283-session.claude.jsonl \
+    --seed-rev 32258fdb \
+    --file "d:/work/big-hackathon/re2283/src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs" \
+    --line 1442
+
+# 4. the same review pipeline as Beat 5, now with a genuine capsule
+cd ../ab
+python run_ab.py --repo ../../repo --branch ju26-re-2283 \
+    --issue ../../.trust/issues/2283.md --expect-files 4
 ```
 
-Regions touched by untracked shell writes are reported as divergent, and
-narration covering several edits is flagged `[batch]` rather than attributed to
-single lines.
+Results (honest):
 
----
+- The implementation is **byte-identical** to Tieto's commit `9df83c3`
+  (4 files, 225 insertions, 3 deletions) — a *guided reproduction*, because the
+  implementer saw the reference. The commit message says so.
+- The worktree builds and its regression tests pass: **19/19**
+  (`dotnet test --filter GenericsFormatterTests`).
+- The capsule graph: **365 nodes, 720 edges**, including the human decisions
+  with their rejected options, the branch↔commit join, and every edit with its
+  uuid.
+- `why_lines` attributes the patch lines to the exact edit + stated reason +
+  trigger + commit, and reports `replay matches disk exactly`.
+- The reviewer on this patch finds **no defect** (same as Tieto's branch) and
+  Arm A's false base finding is rejected by the shared verifier. A null result
+  is reported as a null result.
+- **Pending:** the clean-room run (same task, no access to the reference) after
+  the Claude usage limit resets, to measure convergence without steering.
 
-## Beat 4 — The fused graph (60 s)
-
-```bash
-python build_graph.py --session <session-id> --repo ../../repo \
-    --out session_graph.json --html session_graph.html
-```
-
-Open `session_graph.html`. 133 nodes, 239 edges, fully provenanced, no LLM in
-the extraction path. Click **Fuse view** to show only the conversation↔git
-join, then click the `DECISION` nodes — they carry the options the human
-*rejected*, which no diff records. Use **Replay** to scrub the session forward.
+What the re-enactment is **not**: it is not Tieto's agent, and it is never
+presented as such. It measures the *mechanism* — how much of an author's
+reasoning is capturable (L0–L3) and what it changes — under controlled
+conditions.
 
 ---
 
@@ -209,17 +220,25 @@ join, then click the `DECISION` nodes — they carry the options the human
 | Assumptions | invisible | enumerated, compiled to commands, falsified |
 | #2297's gap | unreachable — no test fails | found, with a 2-command repro |
 | Reviewer error | confident and unfalsifiable | caught by its own provenance |
-
----
+| Author's real reasoning | not shipped by Tieto — unrecoverable | captured only in our own re-enactment, labelled as ours |
 
 ## Honesty rules for the presentation
 
-- Beat 0's false finding is **ours**, not Tieto's. Present it as our error.
-- #2297's agent did most of the job well. Say so before the finding.
-- The #2297 gap is a **feature gap**, not a crash or data-corruption bug. Do
-  not inflate it.
-- `L4 PRIVATE` is unavailable. Never imply we recover an agent's chain of
-  thought.
-- Beat 2's finding is real and needs no injection. If an injected regression is
-  used for any other beat, it is labelled in the branch name, the commit
-  message, the report header and the narration.
+1. Beat 0's false finding is **ours**, not Tieto's. Present it as our error.
+2. The #2297 agent did most of the job well. Say so before the finding.
+3. The #2297 finding is a **feature gap plus a false README sentence** — not a
+   crash, not corruption, not a security issue. Do not inflate it.
+4. Three of the four branches yield nothing real from either arm. That is an
+   honest result, not four wins.
+5. Private agent reasoning is NOT recoverable. Claude Code stores thinking
+   blocks empty (36 blocks, 0 chars). We recover what was RECORDED, and our
+   converter deliberately does not copy `reasoning_content` even when a harness
+   records it.
+6. The repository is HUMAN code; the challenge input is the four AI-made
+   patches. Tieto shipped no authoring sessions, so no capsule of their agents'
+   reasoning exists and we claim none. The re-enactment capsule is OUR
+   session, labelled guided, never presented as theirs.
+7. Confirmed findings and unverified hypotheses are counted separately and
+   never combined into one score.
+8. Token figures from `--dry-run` come from tiktoken cl100k_base: ratios are
+   reliable, absolute values are approximate for Claude.

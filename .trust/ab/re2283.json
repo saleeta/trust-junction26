@@ -1,0 +1,45 @@
+{
+  "branch": "ju26-re-2283",
+  "true_base": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+  "arm_a": {
+    "arm": "A (no capsule)",
+    "has_capsule": false,
+    "findings": [
+      {
+        "id": "scope-dependency-change",
+        "title": "dependency manifest changed, not requested by the issue",
+        "claim": "the diff modifies Directory.Packages.props, which the issue does not ask for; dependency changes in a feature branch alter every consumer's resolved graph",
+        "severity": "moderate",
+        "evidence": [
+          "base used: 524fd55e1",
+          "changed manifests: ['Directory.Packages.props']",
+          "issue text contains no dependency request"
+        ],
+        "verify": "git diff 524fd55e1..ju26-re-2283 -- Directory.Packages.props",
+        "status": "REJECTED",
+        "verify_note": "the manifest is IDENTICAL between 32258fdbe (the branch's real parent) and ju26-re-2283. The claim is an artefact of a misresolved base - a false finding.",
+        "test_invisible": null,
+        "from_capsule": false
+      }
+    ],
+    "assumptions_checked": 0,
+    "assumptions_falsified": 0,
+    "base_used": "524fd55e14ff38875c5f24f4dd3b4ea744f4d883",
+    "base_method": "merge-base with origin/master (first ref that existed)",
+    "bytes_read": 4862,
+    "sources_read": 4,
+    "git_calls": 4
+  },
+  "arm_b": {
+    "arm": "B (capsule)",
+    "has_capsule": true,
+    "findings": [],
+    "assumptions_checked": 1,
+    "assumptions_falsified": 0,
+    "base_used": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+    "base_method": "first_parent (confirmed, oracle-checked)",
+    "bytes_read": 5353,
+    "sources_read": 3,
+    "git_calls": 1
+  }
+}

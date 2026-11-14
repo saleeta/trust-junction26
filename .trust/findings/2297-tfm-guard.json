@@ -22,14 +22,14 @@
         "api": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
         "compiles": true,
         "command": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
-        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.38"
+        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.52"
       },
       {
         "tfm": "netstandard2.0",
         "api": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
         "compiles": true,
         "command": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_netstandard2_0\\p.csproj\" -v q --nologo",
-        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.50"
+        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.51"
       }
     ],
     "shipped_tfms": [

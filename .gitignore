@@ -10,3 +10,7 @@ session_graph.json
 .trust/repro/*/bin/
 .trust/repro/*/obj/
 .trust/memory.db
+.trust/memory-*.db
+# scratch worktrees for instrumented re-implementation experiments
+.trust/re-worktrees/
+/re2283/

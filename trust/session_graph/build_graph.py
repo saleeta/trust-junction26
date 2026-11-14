@@ -204,7 +204,7 @@ class GitRepo:
     """
 
     SHA_RE = re.compile(r"\b[0-9a-f]{7,40}\b")
-    REF_RE = re.compile(r"\b(?:origin/)?((?:ju26-issue-|fix|v)[\w.\-/]+|master|develop|main)\b")
+    REF_RE = re.compile(r"\b(?:origin/)?((?:ju26-issue-|ju26-re-|fix|v)[\w.\-/]+|master|develop|main)\b")
 
     def __init__(self, path: Path | None) -> None:
         self.path = path if path and (path / ".git").exists() else None

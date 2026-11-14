@@ -1,0 +1,41 @@
+[
+  {
+    "strategy": "full",
+    "prompt_tokens": 4510,
+    "evidence_tokens": 3252,
+    "hits": 4,
+    "dropped": 0,
+    "citations": false,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  },
+  {
+    "strategy": "full-triaged",
+    "prompt_tokens": 4510,
+    "evidence_tokens": 3252,
+    "hits": 4,
+    "dropped": 0,
+    "citations": false,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  },
+  {
+    "strategy": "recall",
+    "prompt_tokens": 3444,
+    "evidence_tokens": 2185,
+    "hits": 17,
+    "dropped": 31,
+    "citations": true,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  }
+]

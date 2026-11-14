@@ -247,16 +247,25 @@ def apply_op(cur: str, op: Op) -> tuple[str, str | None]:
     return cur.replace(op.old, op.new, 1), None
 
 
-def replay(ops: list[Op], target: str) -> tuple[list[LineAttr], list[str], str]:
-    """Replay ops for one file; attribute each final line to the op that wrote it."""
+def replay(ops: list[Op], target: str, seed: str | None = None) -> tuple[list[LineAttr], list[str], str]:
+    """Replay ops for one file; attribute each final line to the op that wrote it.
+
+    `seed` is the file content BEFORE the session's first tracked edit (e.g.
+    `git show <rev>:<path>`). Without it, replay starts empty and only works
+    for files the session created with a Write. Lines that come from the seed
+    are attributed to no op - the L0 commit layer covers them.
+    """
     rel = [o for o in ops if norm_path(o.path).endswith(norm_path(target).lstrip("./"))]
     if not rel:
         return [], [f"no tracked edit operations for {target!r}"], ""
 
     warnings: list[str] = []
-    content = ""
-    # owner[i] = op that last wrote line i of `content`
-    owners: list[Op | None] = []
+    if seed is None:
+        content = ""
+        owners: list[Op | None] = []
+    else:
+        content = seed
+        owners = [None] * len(seed.splitlines())
 
     for op in rel:
         if op.failed:
@@ -295,11 +304,35 @@ def replay(ops: list[Op], target: str) -> tuple[list[LineAttr], list[str], str]:
 # L0: git blame
 # ---------------------------------------------------------------------------
 
-def git_blame(path: Path) -> dict[int, dict[str, str]] | None:
+def _repo_root(path: Path) -> Path | None:
     repo = path.resolve().parent
     while repo != repo.parent and not (repo / ".git").exists():
         repo = repo.parent
-    if not (repo / ".git").exists():
+    return repo if (repo / ".git").exists() else None
+
+
+def git_show_at(path: Path, rev: str) -> str | None:
+    """The file's content at `rev`, to seed a replay for pre-existing files."""
+    repo = _repo_root(path)
+    if not repo:
+        return None
+    try:
+        rel = str(path.resolve().relative_to(repo)).replace("\\", "/")
+    except ValueError:
+        return None
+    try:
+        out = subprocess.run(
+            ["git", "show", f"{rev}:{rel}"],
+            cwd=repo, capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout if out.returncode == 0 else None
+
+
+def git_blame(path: Path) -> dict[int, dict[str, str]] | None:
+    repo = _repo_root(path)
+    if not repo:
         return None
     try:
         out = subprocess.run(
@@ -397,6 +430,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--session", help="session id or transcript path")
     ap.add_argument("--latest", action="store_true", default=True)
+    ap.add_argument("--seed-rev", help=(
+        "git revision holding the file content BEFORE this session's edits; "
+        "pre-existing lines are then attributed to the L0 commit layer only"))
     ap.add_argument("--file", help="file to explain")
     ap.add_argument("--line", type=int, help="single line number")
     ap.add_argument("--range", help="line range, e.g. 100-140")
@@ -426,7 +462,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\nrun: python why_lines.py --file <path> --line <n>")
         return 0
 
-    attrs, warnings, replayed = replay(ops, args.file)
+    attrs, warnings, replayed = replay(
+        ops, args.file,
+        seed=git_show_at(Path(args.file).resolve(), args.seed_rev)
+        if args.seed_rev else None)
     if not attrs:
         for w in warnings:
             print(f"{C['re']}{w}{C['r']}")
@@ -441,6 +480,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({
             "file": str(target),
             "replay_matches_disk": not diverged,
+            "seed_rev": args.seed_rev,
             "warnings": warnings,
             "layers_available": {
                 "L0_commit": blame is not None, "L1_edit": True,
@@ -478,6 +518,9 @@ def main(argv: list[str] | None = None) -> int:
               f"tracked operations.{C['r']}")
     else:
         print(f"{C['gr']}replay matches disk exactly - attribution is complete{C['r']}")
+    if args.seed_rev:
+        print(f"{C['dim']}replay seeded from git rev {args.seed_rev}: pre-existing "
+              f"lines are attributed to the L0 commit layer only{C['r']}")
     for w in warnings:
         print(f"{C['ye']}  note: {w}{C['r']}")
     print()

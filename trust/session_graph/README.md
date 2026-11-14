@@ -91,9 +91,15 @@ to the operation that introduced it.
 
 ```bash
 python why_lines.py --list                              # files this session wrote
-python why_lines.py --file build_graph.py --line 592     # one line, full chain
+python why_lines.py --file build_graph.py --line 200     # one line, full chain
 python why_lines.py --file ../../DESIGN.md --all         # attribution by region
-python why_lines.py --file build_graph.py --line 592 --json
+python why_lines.py --file build_graph.py --line 200 --json
+
+# files the session edited but did not create: seed the replay with the
+# pre-edit content from git, so untouched lines are attributed to the L0
+# commit layer instead of being guessed at
+python why_lines.py --file ../re2283/src/MessagePack.SourceGenerator/CodeAnalysis/TypeCollector.cs \
+    --line 1442 --session ../../.trust/capsules/re2283-session.claude.jsonl --seed-rev 32258fdb
 ```
 
 The answer is **layered, and each layer is labelled** rather than blended into
@@ -133,3 +139,11 @@ as untracked, never silently assigned.
   smoke-tested in a browser in this environment.
 - Repulsion is O(n²) per frame. Fine into the low thousands of nodes; beyond
   that it needs a quadtree.
+
+## Other harnesses
+
+`deepcode_convert.py` deterministically re-encodes a deepcode-harness session
+log (OpenAI-style records) into this tooling's transcript format, preserving
+every uuid/tool_use_id as provenance. It deliberately does **not** copy the
+model's `reasoning_content`: the capsule contains what the agent recorded, not
+what it privately reasoned.

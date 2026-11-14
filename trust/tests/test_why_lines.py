@@ -90,6 +90,52 @@ def test_single_narration_not_flagged_as_batch(edited_session):
 
 
 # ---------------------------------------------------------------------------
+# seeded replay: files the session edited but did not create
+# ---------------------------------------------------------------------------
+
+def test_replay_with_git_seed_attributes_only_session_edits(transcript, tmp_path):
+    """Pre-existing lines come from the seed and belong to no op; the edited
+    line belongs to the Edit. Without the seed the same ops fail to replay."""
+    t = transcript()
+    t.prompt("fix a pre-existing file")
+    e = t.tool_use("Edit", {"file_path": "D:\\p\\z.py",
+                             "old_string": "x = 1", "new_string": "x = 11"})
+    t.tool_result(e, "ok")
+    ops, _ = ops_for(t, tmp_path)
+
+    # no seed: the edit cannot apply to empty content
+    attrs, warnings, _ = wl.replay(ops, "z.py")
+    assert warnings and any("not found" in w for w in warnings)
+
+    # with the pre-edit content from git, replay succeeds and is honest:
+    # untouched lines are unattributed (L0 territory), the changed line is the Edit's
+    seed = "x = 1\ny = 2\n"
+    attrs, warnings, content = wl.replay(ops, "z.py", seed=seed)
+    assert warnings == []
+    assert content == "x = 11\ny = 2\n"
+    assert attrs[0].op is not None and attrs[0].op.kind == "Edit"
+    assert attrs[1].op is None, "a line the session did not write has no op"
+
+
+def test_replay_seed_survives_multiple_edits(transcript, tmp_path):
+    t = transcript()
+    t.prompt("two edits on a pre-existing file")
+    a = t.tool_use("Edit", {"file_path": "D:\\p\\w.py",
+                             "old_string": "a", "new_string": "A"})
+    t.tool_result(a, "ok")
+    b = t.tool_use("Edit", {"file_path": "D:\\p\\w.py",
+                             "old_string": "c", "new_string": "C"})
+    t.tool_result(b, "ok")
+    ops, _ = ops_for(t, tmp_path)
+
+    attrs, warnings, content = wl.replay(ops, "w.py", seed="a\nb\nc\n")
+    assert warnings == []
+    assert content == "A\nb\nC\n"
+    assert attrs[0].op is not None and attrs[2].op is not None
+    assert attrs[1].op is None
+
+
+# ---------------------------------------------------------------------------
 # failure handling - must warn, never guess
 # ---------------------------------------------------------------------------
 

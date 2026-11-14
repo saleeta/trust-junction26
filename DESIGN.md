@@ -5,6 +5,15 @@
 `32258fdb` ("Bump PolySharp from 1.14.1 to 1.15.0").
 **Backlog:** `sprints.md` (unchanged; this doc is the architecture that delivers it).
 
+> **What is under review.** The library is HUMAN code (first commit 2017-02-13,
+> 3,536 commits). The challenge input is the four **AI-made patches** — one
+> commit per branch. The system reviews the patch; the human base is the oracle
+> that makes assumption checks decidable ("did this belief exist before the
+> agent arrived?"). Agent attribution from style alone is explicitly out of
+> scope: the four commits carry no agent provenance, and naming an agent from
+> unlabeled samples would violate the trust contract. See §5.1 for the
+> re-enactment that measures what recorded context is worth.
+
 > **Base-commit note.** `origin/develop` does not exist in this fork, so
 > `git merge-base <branch> origin/develop` fails and a naive fallback to
 > `master` yields `524fd55e` — a commit two steps too far back. Diffing from
@@ -306,12 +315,39 @@ the entire thesis in one slide, and it is not synthetic.
 
 ### 5.1 Produce genuine agent context
 
-Tieto did not ship the agent conversations, so we generate a real pair.
-Instrument an agent re-implementing issue **#2283** against base `32258fdb`,
-capturing the full session. That yields a diff *and* its authentic capsule, and
-lets us compare our agent's solution against Tieto's on the same issue.
+Tieto did not ship the agent conversations, so **the authentic authoring
+context for the four challenge branches is unrecoverable** and no tool can
+honestly reconstruct it. What exists instead is a controlled re-enactment: an
+instrumented session re-implementing issue **#2283** against base `32258fdb`,
+capturing the full transcript, then graphed with the same deterministic
+pipeline used everywhere else.
 
-For Tieto's four branches, build retro-capsules (labelled `reconstructed`).
+Executed 2026-11-14 (see DEMO.md "re-enactment experiment"):
+
+- **Guided reproduction** — the session produced a patch byte-identical to
+  Tieto's commit `9df83c3` (branch `ju26-re-2283`, commit `c3791be5`,
+  labelled in the commit message: the implementer saw the reference). The
+  worktree builds; 19/19 GenericsFormatterTests pass.
+- The transcript (a deepcode-harness log) is re-encoded deterministically by
+  `trust/session_graph/deepcode_convert.py` — private `reasoning_content` is
+  deliberately not copied — and graphed: 365 nodes, 720 edges, decisions with
+  rejected options, branch↔commit join.
+- `why_lines.py --seed-rev` attributes the patch's lines to the exact edit,
+  stated reason and trigger; pre-existing lines are attributed to the L0
+  commit layer only. `replay matches disk exactly`.
+- The review pipeline on the re-enactment branch reproduces the Tieto-branch
+  result (no defect; Arm A's false base finding rejected) and, on the 4-file
+  diff, measures recall saving only 23.6% vs 55–96% on the 237-file diff —
+  retrieval pays at scale, and the small-diff number is published too.
+- **Pending:** a clean-room run (same task, no access to the reference) after
+  the Claude usage limit resets, to measure convergence without steering.
+
+The re-enactment is **not Tieto's agent and is never presented as such**. It
+measures the mechanism — how much of an author's reasoning is capturable
+(L0–L3) and what attaching it changes — under controlled conditions.
+
+For Tieto's four branches, retro-capsules (labelled `reconstructed`) remain
+the only honest source.
 
 ### 5.2 The measured comparison
 
