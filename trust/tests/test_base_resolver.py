@@ -90,7 +90,7 @@ def test_oracle_would_have_caught_the_original_error(divergent_repo):
     from_wrong = git.changed_files(divergent_repo["B"], divergent_repo["branch"])
 
     assert from_right == 1
-    assert from_wrong == 2, "the wrong base drags in deps.props"
+    assert from_wrong == 2, "the wrong base drags in Directory.Packages.props"
     assert from_right != from_wrong
 
 
