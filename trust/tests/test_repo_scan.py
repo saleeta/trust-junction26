@@ -50,8 +50,7 @@ function setStep(n){globalThis.lastStep=n}
 const fetch=async url=>{
  const value=String(url);
  if(value.includes('/pulls?'))return {ok:true,json:async()=>[]};
- if(value.endsWith('/repos/o/r'))return {ok:true,json:async()=>({default_branch:'main'})};
- if(value.includes('/git/trees/'))return {ok:true,json:async()=>({truncated:false,tree:[
+ if(value.includes('/git/trees/HEAD?'))return {ok:true,json:async()=>({truncated:false,tree:[
    {type:'blob',path:'src/main.py',size:12}]})};
  if(value.includes('raw.githubusercontent.com'))return {ok:true,text:async()=>"print('hello')"};
  throw Error('Unexpected URL '+value);
@@ -67,3 +66,29 @@ loadRepo('https://github.com/o/r').then(()=>console.log(JSON.stringify({
     assert state["count"] == 4
     assert state["step"] == 0
     assert "no recent merged PRs" in state["notice"]
+
+
+def test_rate_limit_is_named_with_reset_time():
+    source = deck._JS
+    loader = source[source.index("function parseRepo"):source.index("function setPipeline")]
+    script = """
+let mode,entries;
+const elements={notice:{classList:{remove(){},add(){}},textContent:''},
+ origin:{textContent:''},'load-repo':{disabled:false,textContent:''}};
+function by(id){return elements[id]}
+function refreshDigest(){}
+function setStep(n){}
+const limited={'x-ratelimit-remaining':'0','x-ratelimit-limit':'60','x-ratelimit-reset':'1794681272'};
+const fetch=async url=>{
+ if(String(url).includes('api.github.com'))
+  return {ok:false,status:403,headers:{get:k=>limited[k]??null}};
+ return {ok:false,status:404};
+};
+""" + loader + """
+loadRepo('https://github.com/o/r').then(()=>console.log(elements.notice.textContent));
+"""
+    result = subprocess.run(["node", "-e", script], capture_output=True,
+                            text=True, check=True)
+    assert "rate limit reached" in result.stdout
+    assert "resets at" in result.stdout
+    assert "403" not in result.stdout
