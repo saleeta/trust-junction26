@@ -1,10 +1,10 @@
 # Two-minute stage presentation
 
-Open the [visual belief replay](demo/concept-deck.html) before the timer starts.
-The checked example is already loaded. Press **Next** four times, or use
-**Play** for an automatic replay. Each step draws one new claim and changes
-the old ones when evidence arrives. Click a belief to change the witness shown
-at the right. Arrow keys also move between merges.
+Open the [visual review replay](demo/concept-deck.html) before the timer starts.
+The four supplied AI-made MessagePack branches are already loaded. Press the
+right arrow to reveal each patch, or **Replay changes** to reveal them on a
+timer. Click a branch row to open its claims, facts, challenges, new knowledge,
+and remaining gaps. The toy shop is available through **Example**.
 
 | Time | Stage action and line |
 |---|---|
@@ -14,10 +14,11 @@ at the right. Arrow keys also move between merges.
 | 65–100 s | Advance PR #4. “The AI caps each discount at 50%, yet the negative price survives, and VIP now gets only 50%. Green tests do not cover those cases.” |
 | 100–120 s | Point to the pending human decision; open the real #2297 receipt if needed. “The reviewer brings counterexamples and uncertainty to a human. It does not approve its own patch.” |
 
-The repository field accepts a **public GitHub URL** and loads recent merged
-PR metadata. In that mode, titles remain unverified candidate beliefs and
-produce warnings only. The checked conflict story is the local toy example;
-arbitrary-repository proof extraction is a proposed next step.
+The repository field accepts a **public GitHub URL**. The supplied challenge
+repository loads its four AI-made branches and the checked #2297 finding.
+Other repositories load recent merged PR metadata and changed-file facts on
+selection. Their titles remain unverified candidate claims: this reference
+does not run a proof checker for arbitrary repositories.
 
 The prior [animated slide deck](demo/concept-deck-slides.html) remains available
 as a fallback.

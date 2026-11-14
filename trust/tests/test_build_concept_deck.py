@@ -54,7 +54,8 @@ def test_comparison_uses_real_claim_counts():
     assert comparison["pipeline"]["beliefs"] == 10
     assert comparison["pipeline"]["refuted"] == 7
     assert comparison["pipeline"]["tokens"] > comparison["replay"]["tokens"]
-    assert comparison["pipeline"]["agent_context"] is True
+    assert comparison["pipeline"]["agent_context"] is False
+    assert comparison["pipeline"]["checked"] == 9  # Unknown is not checked
     assert comparison["replay"]["checked"] == 0
 
 
