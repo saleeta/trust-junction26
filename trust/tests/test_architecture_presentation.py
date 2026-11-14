@@ -16,11 +16,14 @@ def test_timed_architecture_deck_and_published_copy():
     assert len(durations) == 7 and sum(durations) == 120
     for fact in ("Requirements", "Current code", "Entire", "MongoDB Atlas",
                  "$graphLookup", "CANDIDATE CLAIM", "source_kind: implicit_in_code",
-                 "check_cmd:", "parent SHA", "check matrix",
-                 "hypothesis · unconfirmed", "Scoped formal verification",
+                 "check_cmd:", "parent SHA", "Run check",
+                 "unconfirmed → check", "Scoped formal verification",
                  "Human decision", "Revocable"):
         assert fact.lower() in source.lower()
     assert 'href="review-2297.html"' in source
+    assert 'href="claim-tableau.html"' in source
+    assert (ROOT / "demo/claim-tableau.html").read_text(encoding="utf-8") == (
+        ROOT / "docs/claim-tableau.html").read_text(encoding="utf-8")
     # the deep-dive layer: formal logic, node joins, verdict rules,
     # codebase-wide re-checking, and the named acceptance
     for fact in ("detailsBtn", "∀ p ∈ PRODUCTS", "harvested-from",
