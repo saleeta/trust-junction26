@@ -48,6 +48,7 @@ def load_artifacts(root: Path) -> dict:
         "tree": load_json(root / ".trust" / "tree" / "2297-tree.json"),
         "review": load_json(root / "demo" / "review-2297.json"),
         "proof": load_json(root / ".trust" / "findings" / "2297-proof.json"),
+        "toy": load_json(root / "toy" / "out" / "review.json"),
     }
 
 
@@ -408,49 +409,121 @@ def s_trail(d: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Part 1: the small sandbox - how the graph works, on a toy example
+# Part 1: the toy repo - a real, small, runnable sandbox
 # ---------------------------------------------------------------------------
 
-def s_small(_d: dict) -> str:
-    return """
-    <h2>Start small: a three-file toy project</h2>
-    <div class="sandboxnote">toy example - mechanics only, not a real finding</div>
+TOY_LABEL_CLS = {"Refuted": "bad", "Proved within scope": "ok",
+                 "Tested": "mid", "Unknown": "dim"}
+
+
+def _toy(d: dict):
+    return d.get("toy") or {}
+
+
+def s_toy_intro(d: dict) -> str:
+    toy = _toy(d)
+    if not toy:
+        return ("<h2>Start small: the toy repo</h2><p>run "
+                "<code>python toy/review.py</code> first - toy review missing</p>")
+    log = toy.get("log") or []
+    history = "".join(f"<li>{esc(e)}</li>" for e in log[:4])
+    files = toy.get("files") or {}
+    file_cards = ""
+    for path in list(files)[:3]:
+        lines = files[path]
+        claimed = sum(len(l.get("claims") or []) for l in lines)
+        file_cards += (f"<div class='card code'><h3>{esc(path)}</h3>"
+                       f"<p class='dim'>{len(lines)} lines, {claimed} linked to claims</p>"
+                       f"<pre>{esc(lines[0].get('text', ''))}</pre></div>")
+    return f"""
+    <h2>Start small: a four-PR toy shop, fully runnable</h2>
+    <div class="sandboxnote">everything on these slides re-runs: <code>python toy/review.py</code></div>
     <div class="split">
-      <div class="card code">
-        <h3>store.py</h3>
-<pre>items = {}
-def put(k, v): items[k] = v
-def get(k):    return items[k]</pre>
+      <div class="card">
+        <h3>the real git history</h3>
+        <ul class="tight">{history}</ul>
+        <p class="dim">PR #4 is the AI patch: &ldquo;cap every discount at 50% so prices
+        can't go negative&rdquo;. It looks sensible and its tests stay green -
+        and it is wrong in three ways that get harder to see.</p>
       </div>
-      <div class="card code">
-        <h3>checkout.py</h3>
-<pre>def total(cart):
-    s = 0
-    for k in cart:
-        s += store.get(k).price   # &lt;- assumes every key exists
-    return s</pre>
-      </div>
-      <div class="card code">
-        <h3>tests</h3>
-<pre>assert total({"a": 2}) == 12   # passes
-# no test for a missing key</pre>
+      <div class="card">
+        <h3>the files</h3>
+        {file_cards}
+        <p class="dim">every changed line carries the claim ids it links to -
+        stated once per hunk, never copied per line.</p>
       </div>
     </div>
-    <p>Everything the review system does is easier to see here than in a
-    237-file patch. Next: how this toy becomes a graph.</p>"""
+    <p class="dim center">The graph for this toy has {len(toy.get('nodes', []))} nodes
+    and {len(toy.get('edges', []))} edges - small enough to read whole.</p>"""
 
 
-def s_graph_made(_d: dict) -> str:
-    return """
+def s_toy_review(d: dict) -> str:
+    toy = _toy(d)
+    if not toy:
+        return ("<h2>The toy review ledger</h2><p>run "
+                "<code>python toy/review.py</code> first</p>")
+    claims = toy.get("claims") or []
+    rules = toy.get("rules") or {}
+    stages = {1: "stage 1 · the diff", 2: "stage 2 · earlier PRs' promises",
+              3: "stage 3 · the callers"}
+    cards = ""
+    for c in claims:
+        cls = TOY_LABEL_CLS.get(c.get("label"), "dim")
+        stage = stages.get(c.get("stage"), "?")
+        rule_text = rules.get(c.get("rule"), "")
+        wit = ""
+        for w in (c.get("witnesses") or [])[:2]:
+            wit += f"<li>{esc(str(w))}</li>"
+        cards += f"""
+        <div class="acard {'falsified' if c.get('label') == 'Refuted' else 'supported'}"
+             onclick="toggle(this)">
+          <div class="ahead"><b>{esc(c.get('id'))}</b> {esc(c.get('short', ''))}
+            <span class="sev">{esc(c.get('label'))}</span>
+            <span class="dim">{esc(stage)}</span></div>
+          <div class="abody">
+            <p class="assume">{esc(c.get('claim', ''))}</p>
+            <p class="dim">formula: <code>{esc(c.get('formula', ''))}</code></p>
+            <p class="blast">witnesses ({esc(str(c.get('n_witnesses', len(wit) or '')))})</p>
+            <ul class="tight">{wit}</ul>
+            <p class="dim">rule {esc(c.get('rule'))}: {esc(rule_text)}</p>
+            <div class="cmdline" onclick="copyCmd(event, this)">$ {esc(c.get('command', ''))}</div>
+          </div>
+        </div>"""
+    chain = toy.get("chain") or []
+    chain_html = " &larr; ".join(f"{esc(f)}({n})" for f, n in chain)
+    return f"""
+    <h2>The toy review ledger - click any claim</h2>
+    <div class="treesplit">
+      <div>{cards}</div>
+      <div class="card">
+        <h3>three depths, one checker discipline</h3>
+        <p><b>R-RUN</b> - {esc(rules.get('R-RUN', ''))}</p>
+        <p><b>R-HIST</b> - {esc(rules.get('R-HIST', ''))}</p>
+        <p><b>R-CALL</b> - {esc(rules.get('R-CALL', ''))}</p>
+        <p><b>R-TEST</b> - {esc(rules.get('R-TEST', ''))}</p>
+        <p><b>R-HUMAN</b> - {esc(rules.get('R-HUMAN', ''))}</p>
+        <h3>the call chain the parser found</h3>
+        <p class="formal">{chain_html}</p>
+        <p class="dim">open the full interactive page:
+        <a href="toy/out/review.html" target="_blank">toy/out/review.html</a></p>
+      </div>
+    </div>"""
+
+
+def s_graph_made(d: dict) -> str:
+    toy = _toy(d)
+    counts = (f"the toy's graph really has {len(toy.get('nodes', []))} nodes "
+              f"and {len(toy.get('edges', []))} edges") if toy else "any session"
+    return f"""
     <h2>How the graph is made - step by step</h2>
     <div class="steps" id="gmsteps">
       <div class="stepcard"><h3>1 · the session records what happened</h3>
         <p class="dim">a transcript: human prompt &rarr; tool call &rarr; file edit &rarr; commit</p>
-        <code>prompt "add checkout total" · Edit checkout.py · git commit 9f3c</code></div>
+        <code>prompt "cap discounts" · Edit prices.py · git commit aa40be6</code></div>
       <div class="stepcard"><h3>2 · records become nodes</h3>
         <p>one node per fact, with its provenance: <span class="chip">PROMPT</span>
         <span class="chip">TOOL_CALL</span> <span class="chip">FILE</span>
-        <span class="chip">COMMIT</span></p></div>
+        <span class="chip">COMMIT</span> ({counts})</p></div>
       <div class="stepcard"><h3>3 · edges connect them</h3>
         <p><span class="edge">caused</span> prompt&rarr;call ·
         <span class="edge">writes</span> call&rarr;file ·
@@ -492,54 +565,73 @@ def s_colors(_d: dict) -> str:
     </div>"""
 
 
-def s_history(_d: dict) -> str:
-    return """
-    <h2>Current PR vs previous PRs - history does the routing</h2>
-    <div class="sandboxnote">toy example - mechanics only</div>
+def s_history(d: dict) -> str:
+    toy = _toy(d)
+    claims = toy.get("claims") or []
+    stage2 = [c for c in claims if c.get("stage") == 2]
+    rules = toy.get("rules") or {}
+    rows = ""
+    for c in stage2:
+        cls = TOY_LABEL_CLS.get(c.get("label"), "dim")
+        rows += (f"<div class='vrow'><span class='chip {cls}'>{esc(c.get('label'))}</span> "
+                 f"<b>{esc(c.get('id'))}</b> {esc(c.get('short', ''))} "
+                 f"<span class='dim'>- {esc(c.get('claim', ''))[:90]}</span></div>")
+    if not rows:
+        rows = "<p>run <code>python toy/review.py</code> first</p>"
+    return f"""
+    <h2>Current PR vs previous PRs - history is re-checked, not read</h2>
+    <div class="sandboxnote">toy stage 2 · rule R-HIST: {esc(rules.get('R-HIST', ''))}</div>
+    <div class="split">
+      <div class="card bad">
+        <h3>PR #2 promised &ldquo;VIP = 60% off&rdquo; in its README</h3>
+        <p>The new patch caps every discount at 50%. The graph sees the old
+        promise and re-checks it against the new code - B2 is refuted:
+        the VIP shopper no longer gets 60%.</p>
+        <p class="dim">The diff never mentioned VIP. Only the history did.</p>
+      </div>
+      <div class="card">
+        <h3>every stage-2 verdict, honestly labelled</h3>
+        {rows}
+        <p class="dim">A promise made by an earlier PR is a test for every later
+        PR - that is what turns history into a checker.</p>
+      </div>
+    </div>"""
+
+
+def s_expand(d: dict) -> str:
+    toy = _toy(d)
+    claims = toy.get("claims") or []
+    stage3 = [c for c in claims if c.get("stage") == 3]
+    rules = toy.get("rules") or {}
+    chain = toy.get("chain") or []
+    chain_html = " &larr; ".join(f"{esc(f)}({n})" for f, n in chain)
+    rows = ""
+    for c in stage3:
+        cls = TOY_LABEL_CLS.get(c.get("label"), "dim")
+        rows += (f"<div class='vrow'><span class='chip {cls}'>{esc(c.get('label'))}</span> "
+                 f"<b>{esc(c.get('id'))}</b> {esc(c.get('short', ''))} "
+                 f"<span class='dim'>- {esc(c.get('claim', ''))[:90]}</span></div>")
+    if not rows:
+        rows = "<p>run <code>python toy/review.py</code> first</p>"
+    return f"""
+    <h2>How the search space expands - follow the callers</h2>
+    <div class="sandboxnote">toy stage 3 · rule R-CALL: {esc(rules.get('R-CALL', ''))}</div>
     <div class="split">
       <div class="card">
-        <h3>Previous PR #41 fixed the same region</h3>
-        <p><code>checkout.py:4</code> once crashed on a missing key; PR #41 added
-        <code>store.get(k, 0)</code>. The graph records that fix as a commit node
-        with <span class="edge">parent_of</span> edges to today's code.</p>
-        <p class="dim">commit 41a7c2 &ldquo;fix KeyError in checkout.total&rdquo; &rarr; today's line 4</p>
+        <h3>the parser found the call chain</h3>
+        <p class="formal">{chain_html}</p>
+        <p>final_price is refuted &rarr; checkout that calls it is re-checked on
+        the same counterexample &rarr; post_sale that calls checkout too.</p>
+        <p class="dim">Two more refutations (D1 loyalty points, D2 revenue)
+        that no diff-driven review would ever have looked at.</p>
       </div>
-      <div class="card bad">
-        <h3>Current PR #58 touches the same line</h3>
-        <p>The graph routes the reviewer to the history: &ldquo;this region was
-        fragile before; what changed?&rdquo; The new code inlines the lookup again
-        without the default.</p>
-        <p>Reviewer is pre-aimed at exactly the line the previous bug lived on -
-        <b>before</b> reading the rest of the diff.</p>
+      <div class="card">
+        <h3>stage-3 verdicts</h3>
+        {rows}
+        <p class="dim">One counterexample, propagated along the graph, finds
+        problems in code the patch never touched.</p>
       </div>
-    </div>
-    <p class="dim center">History edges turn &ldquo;read everything&rdquo; into
-    &ldquo;check where it broke before&rdquo;. The checker still has to prove the
-    claim - the graph only chooses where to look.</p>"""
-
-
-def s_expand(_d: dict) -> str:
-    return """
-    <h2>How a falsified claim expands the search space</h2>
-    <div class="steps" id="exsteps">
-      <div class="stepcard"><h3>1 · one falsified assumption</h3>
-        <p class="dim">&ldquo;the attribute is unavailable on netstandard2.0 and net472&rdquo; - false,
-        proved by a compile probe.</p></div>
-      <div class="stepcard"><h3>2 · its footprint predicate searches the whole change</h3>
-        <p class="dim">every file carrying the same guard, every shipped target framework,
-        every snapshot that baked the guard in.</p></div>
-      <div class="stepcard"><h3>3 · impact sites are facts</h3>
-        <p>2 shipped frameworks · 6 templates · 220 snapshots = <b>228 sites</b></p></div>
-      <div class="stepcard"><h3>4 · each site becomes a pre-aimed hypothesis</h3>
-        <p class="dim">feature absent on net472 · tests codify the gap · regeneration will
-        re-emit the guard - labelled hypotheses, never findings.</p></div>
-    </div>
-    <div class="center"><button onclick="step('exsteps',1)">step 1</button>
-      <button onclick="step('exsteps',2)">step 2</button>
-      <button onclick="step('exsteps',3)">step 3</button>
-      <button onclick="step('exsteps',4)">all</button></div>
-    <p class="dim center">One falsified claim finds problems nobody asked about -
-    and the deck states which are facts and which are suspicions.</p>"""
+    </div>"""
 
 
 # ---------------------------------------------------------------------------
@@ -640,8 +732,9 @@ def s_proof(d: dict) -> str:
 
 SLIDES = [
     ("The question", s_title),
-    ("Start small", s_small),
+    ("Start small: the toy repo", s_toy_intro),
     ("How the graph is made", s_graph_made),
+    ("The toy review ledger", s_toy_review),
     ("What the colors mean", s_colors),
     ("Current PR vs previous PRs", s_history),
     ("Expanding the search space", s_expand),

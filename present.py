@@ -28,8 +28,21 @@ def pipeline_needed() -> bool:
         ROOT / ".trust" / "tree" / "2297-tree.json",
         ROOT / ".trust" / "ab" / "2297.json",
         ROOT / ".trust" / "ab" / "2297-llm.json",
+        ROOT / ".trust" / "findings" / "2297-proof.json",
+        ROOT / "toy" / "out" / "review.json",
     ]
     return not all(p.exists() for p in required)
+
+
+def run_step(cmd: list[str], cwd: Path, label: str) -> int:
+    p = subprocess.run([sys.executable, *cmd], cwd=cwd, capture_output=True,
+                       text=True, timeout=1800, encoding="utf-8",
+                       errors="replace")
+    if p.returncode != 0:
+        print(f"{label} failed:")
+        print((p.stdout or "")[-800:])
+        print((p.stderr or "")[-400:])
+    return p.returncode
 
 
 def main() -> int:
@@ -47,15 +60,16 @@ def main() -> int:
 
     if not args.no_run and pipeline_needed():
         print("artifacts missing - running the pipeline (python demo.py --quick)")
-        p = subprocess.run([sys.executable, "demo.py", "--quick"],
-                           cwd=ROOT, capture_output=True, text=True,
-                           timeout=1800, encoding="utf-8", errors="replace")
-        if p.returncode != 0:
-            print((p.stdout or "")[-800:])
-            print((p.stderr or "")[-400:])
+        rc = run_step(["demo.py", "--quick"], ROOT, "pipeline")
+        if rc != 0:
             print("pipeline failed; fix it or use --no-run to build from "
                   "existing artifacts")
-            return p.returncode
+            return rc
+        if not (ROOT / "toy" / "out" / "review.json").exists():
+            print("toy review missing - running python toy/review.py")
+            rc = run_step(["toy/review.py"], ROOT, "toy review")
+            if rc != 0:
+                return rc
 
     sys.path.insert(0, str(ROOT / "trust" / "present"))
     import build_presentation as bp
