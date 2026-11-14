@@ -323,12 +323,21 @@ Metrics, all objective:
 | Hidden problems surfaced | each with a runnable repro; "hidden" = no existing test fails |
 | Assumptions falsified | Arm A cannot score here at all — it has no assumptions to check |
 | Localization cost | files/lines read to reach the finding; graph traversal counts it |
-| Context tokens consumed | Arm B should be **lower** despite knowing more, because retrieval is targeted |
+| Finding precision | confirmed / (confirmed + rejected). The headline: a reviewer that is often wrong is worse than useless |
+| Evidence bytes loaded | measured by instrumentation, not estimated |
 | False findings rejected by `verify` | the hallucination rate; Arm A should be higher |
 
-That fourth row is the counterintuitive one worth dwelling on: more context,
-fewer tokens. The capsule does not enlarge the prompt, it tells the reviewer
-what to go and fetch.
+**Correction, measured 2026-11-14.** An earlier draft of this section predicted
+Arm B would consume *less* context than Arm A despite knowing more, on the
+theory that the capsule replaces broad reading with targeted retrieval. The
+harness disproves it: across all four branches Arm B loads 1.08x-2.7x **more**
+evidence, because the capsule *adds* records rather than replacing any reading.
+`run_ab.py` prints this loss itself. The claim is withdrawn and must not be
+presented.
+
+The result that does hold is stronger anyway: **Arm A emits a false finding on
+all four branches** - the same base-misresolution artefact that fooled this
+project's own reviewer - while Arm B emits none. Precision 0-50% versus 100%.
 
 ### 5.3 Hidden-problem walkthrough
 

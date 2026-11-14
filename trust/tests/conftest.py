@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-for sub in ("session_graph", "ingest", "assumptions"):
+for sub in ("session_graph", "ingest", "assumptions", "ab"):
     p = str(ROOT / sub)
     if p not in sys.path:
         sys.path.insert(0, p)
@@ -168,8 +168,8 @@ def divergent_repo(tmp_path):
     b = _commit(repo, {"README.md": "b\n"}, "B: master tip")
 
     _git(repo, "checkout", "-q", "-b", "staging")
-    x = _commit(repo, {"deps.props": "v1\n"}, "X: bump dependency one")
-    y = _commit(repo, {"deps.props": "v2\n"}, "Y: bump dependency two")
+    x = _commit(repo, {"Directory.Packages.props": "v1\n"}, "X: bump dependency one")
+    y = _commit(repo, {"Directory.Packages.props": "v2\n"}, "Y: bump dependency two")
 
     _git(repo, "checkout", "-q", "-b", "feature")
     f = _commit(repo, {"src/Thing.cs": "class Thing {}\n"}, "F: the agent's work")

@@ -1,0 +1,95 @@
+{
+  "branch": "origin/ju26-issue-2297",
+  "true_base": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+  "arm_a": {
+    "arm": "A (no capsule)",
+    "has_capsule": false,
+    "findings": [
+      {
+        "id": "scope-dependency-change",
+        "title": "dependency manifest changed, not requested by the issue",
+        "claim": "the diff modifies Directory.Packages.props, which the issue does not ask for; dependency changes in a feature branch alter every consumer's resolved graph",
+        "severity": "moderate",
+        "evidence": [
+          "base used: 524fd55e1",
+          "changed manifests: ['Directory.Packages.props']",
+          "issue text contains no dependency request"
+        ],
+        "verify": "git diff 524fd55e1..origin/ju26-issue-2297 -- Directory.Packages.props",
+        "status": "REJECTED",
+        "verify_note": "the manifest is IDENTICAL between 32258fdbe (the branch's real parent) and origin/ju26-issue-2297. The claim is an artefact of a misresolved base - a false finding.",
+        "test_invisible": null,
+        "from_capsule": false
+      },
+      {
+        "id": "review-noise-ratio",
+        "title": "diff dominated by generated files",
+        "claim": "222 of 238 changed files are generated (93%); only 13 are source",
+        "severity": "low",
+        "evidence": [
+          "generated: 222",
+          "source: 13",
+          "test: 1"
+        ],
+        "verify": "git diff --name-only 524fd55e1..origin/ju26-issue-2297 | wc -l",
+        "status": "CONFIRMED",
+        "verify_note": "237 files changed vs real base",
+        "test_invisible": false,
+        "from_capsule": false
+      }
+    ],
+    "assumptions_checked": 0,
+    "assumptions_falsified": 0,
+    "base_used": "524fd55e14ff38875c5f24f4dd3b4ea744f4d883",
+    "base_method": "merge-base with origin/master (first ref that existed)",
+    "bytes_read": 36310,
+    "sources_read": 4,
+    "git_calls": 4
+  },
+  "arm_b": {
+    "arm": "B (capsule)",
+    "has_capsule": true,
+    "findings": [
+      {
+        "id": "review-noise-ratio",
+        "title": "diff dominated by generated files",
+        "claim": "222 of 237 changed files are generated (94%); only 13 are source",
+        "severity": "low",
+        "evidence": [
+          "generated: 222",
+          "source: 13",
+          "test: 1"
+        ],
+        "verify": "git diff --name-only 32258fdbe..origin/ju26-issue-2297 | wc -l",
+        "status": "CONFIRMED",
+        "verify_note": "237 files changed vs real base",
+        "test_invisible": false,
+        "from_capsule": false
+      },
+      {
+        "id": "assumption-tfm-guard-0",
+        "title": "falsified assumption: System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage guarded by #if !NETSTANDARD2_0 && !NETFRAMEWORK",
+        "claim": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage is unavailable on net472, netstandard2.0, and narrowing the feature to exclude them is acceptable - FALSE",
+        "severity": "moderate",
+        "evidence": [
+          "condition '#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change, not a repo convention",
+          "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0'] - the guard is always satisfied in CI, so no test can observe the excluded path",
+          "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the compatibility premise for the guard is false",
+          "the originating issue does not mention target frameworks at all - the conditionality was introduced by the implementer, not requested"
+        ],
+        "verify": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
+        "status": "CONFIRMED",
+        "verify_note": "compile probe executed; premise falsified",
+        "test_invisible": true,
+        "from_capsule": true
+      }
+    ],
+    "assumptions_checked": 2,
+    "assumptions_falsified": 1,
+    "base_used": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+    "base_method": "first_parent (confirmed, oracle-checked)",
+    "bytes_read": 39263,
+    "sources_read": 4,
+    "git_calls": 1
+  }
+}
