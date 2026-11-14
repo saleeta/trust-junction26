@@ -17,3 +17,6 @@ session_graph.json
 # local Entire CLI installation and generated pinned repro inputs
 /.tools/
 .trust/repro/*/source_snapshot/
+
+# raw session data stays local (never pushed without clearance review)
+.trust/capsules/re2283-*
