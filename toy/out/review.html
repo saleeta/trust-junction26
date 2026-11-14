@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Proof-carrying review - a tiny shop</title>
+<style>
+:root{--bg:#0f1420;--card:#171e2e;--ink:#e6eaf2;--mute:#8d98b0;--line:#2a3550}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,sans-serif}
+header{padding:14px 22px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:19px}
+header p{margin:5px 0 0;color:#aab4cc;max-width:1000px}
+.wrap{display:grid;grid-template-columns:minmax(800px,1fr) 430px;gap:16px;padding:16px 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.steps{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.steps button{background:#222c44;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer;font-size:13px}
+.steps button.on{background:#3a4a78;border-color:#8aa0ff}
+#cap{margin:6px 0 8px;min-height:64px;font-size:14.5px}#cap b{color:#fff}#cap .q{color:#f6c453}
+.stats{display:flex;gap:20px;color:var(--mute);font-size:12px;margin-bottom:4px}.stats b{color:#fff;font-size:16px}
+svg{width:100%;height:auto;display:block}
+.node{cursor:pointer;transition:opacity .4s}.node.hide{opacity:0;pointer-events:none}
+.edge{transition:opacity .4s;fill:none}.edge.hide{opacity:0}
+text{font:11px system-ui;fill:var(--ink);pointer-events:none}.col{fill:var(--mute);font-size:11px;letter-spacing:.08em}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;margin-top:10px;font-size:12px;color:#aab4cc}
+.sw{display:inline-block;width:16px;height:11px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:12px;color:#06101e}
+.b-Refuted{background:#ef4444}.b-Proved{background:#22c55e}.b-Tested{background:#0ea5e9}.b-Unknown{background:#94a3b8}
+h3{margin:0 0 6px;font-size:15px}.k{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.07em;margin-top:11px}
+code,pre{font:12px Consolas,monospace}pre{background:#0b101a;border:1px solid var(--line);border-radius:6px;padding:8px;overflow:auto;margin:4px 0}
+.say{background:#1b2540;border-left:3px solid #8aa0ff;padding:7px 10px;border-radius:4px;margin:6px 0}
+.ex{background:#3a1717;border-left:3px solid #ef4444;padding:7px 10px;border-radius:4px;margin:6px 0}
+.code{font:12.5px Consolas,monospace;margin-top:4px}
+.ln{display:flex;border-left:3px solid transparent;white-space:pre}.ln .n{width:34px;color:#55627f;text-align:right;padding-right:10px;user-select:none}
+.ln.ch{background:#143324;border-left-color:#22c55e}.ln.ch.link{cursor:pointer}.ln.ch.link:hover{background:#1c4a33}.ln.sel{outline:1px solid #8aa0ff}
+.chip{margin-left:10px;font-size:10px;padding:0 6px;border-radius:9px;color:#06101e;font-family:system-ui;align-self:center}
+.pend{margin-top:12px;border:1px dashed #6d82c8;border-radius:8px;padding:8px 10px;color:#c9d3f5;background:#1a2340}
+.small{font-size:12px;color:var(--mute)}.hl{filter:drop-shadow(0 0 6px #fff)}
+.chain{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:6px 0}.chain span.f{background:#0f3f3b;border:1px solid #14b8a6;border-radius:6px;padding:2px 8px;font:12px Consolas}
+.chain span.f.bad{border-color:#ef4444;background:#3a1717}
+</style></head><body>
+<header><h1>Proof-carrying review — a patch that looks right, in a tiny shop</h1>
+<p><b>The story.</b> Rule R-1: <i>a customer is never charged a negative price.</i> PR #4 (written by an AI) fixes this by capping every discount at 50%.
+It reads sensibly and <b>every test is green</b>. Step through to see how the review looks <i>deeper</i> than the diff: into old PRs, and into code that merely calls the changed function.</p></header>
+<div class="wrap">
+<div>
+ <div class="card">
+  <div class="steps" id="steps"></div><div id="cap"></div><div class="stats" id="stats"></div>
+  <svg id="g"></svg><div class="legend" id="legend"></div>
+ </div>
+ <div class="card" style="margin-top:14px"><h3>The patch — click a green line</h3>
+  <div class="small">A line only <i>links</i> to the claims it takes part in. The proof is stored once, on the claim.</div><div id="code"></div></div>
+</div>
+<div class="card" id="panel" style="position:sticky;top:12px;align-self:start;max-height:94vh;overflow:auto"></div>
+</div>
+<script>
+const D={"pr3": "1e5307b0", "pr4": "aa40be6c", "claims": [{"id": "A1", "short": "price never negative", "rule": "R-RUN", "claim": "For every basket, the customer's total is never negative.", "origin": "requirement R-1 and the purpose of PR #4", "plain": "The patch says it stops negative prices. Does it?", "formula": "\u2200 b \u2208 BASKETS. total(b) >= 0", "label": "Refuted", "checked": 16, "assumptions": ["base price is 100; codes ['', 'WELCOME', 'HALF', 'VIP']; qty [1, 10]; member [False, True]"], "note": "", "scope_note": "", "example": "A shopper with a HALF coupon, 10 items, a member is charged -100. The shop pays them.", "stage": 1, "witnesses": [{"b": ["HALF", 10, true]}, {"b": ["VIP", 10, true]}], "n_witnesses": 2, "command": "python toy/review.py --check A1"}, {"id": "A2", "short": "README: 'never negative'", "rule": "R-DOC", "claim": "README: \"Prices can never go negative.\"", "origin": "sentence added to README.md by PR #4", "plain": "The README repeats the same promise.", "formula": "README \u21d4 A1", "label": "Refuted", "checked": 0, "assumptions": ["base price is 100; codes ['', 'WELCOME', 'HALF', 'VIP']; qty [1, 10]; member [False, True]"], "note": "derived: this sentence restates A1, so it inherits its verdict (R-DOC)", "scope_note": "", "example": "A shopper with a HALF coupon, 10 items, a member is charged -100. The shop pays them.", "stage": 1, "witnesses": [{"b": ["HALF", 10, true]}, {"b": ["VIP", 10, true]}], "n_witnesses": 2, "command": "python toy/review.py --check A2"}, {"id": "P1", "short": "no-coupon baskets unchanged", "rule": "R-RUN", "claim": "For baskets with no coupon, PR #4 charges exactly what PR #3 charged.", "origin": "a regression check between the two commits", "plain": "Did the patch leave ordinary shoppers alone?", "formula": "\u2200 b \u2208 BASKETS without a coupon. total_pr4(b) == total_pr3(b)", "label": "Proved within scope", "checked": 4, "assumptions": ["base price is 100; codes ['', 'WELCOME', 'HALF', 'VIP']; qty [1, 10]; member [False, True]"], "note": "", "scope_note": "", "example": "", "stage": 1, "witnesses": [], "n_witnesses": 0, "command": "python toy/review.py --check P1"}, {"id": "B1", "short": "cap changes no coupon", "rule": "R-HIST", "claim": "Capping discounts does not change what any existing coupon is worth.", "origin": "coupons were added in PR #2", "plain": "Old coupons should still be worth what they were.", "formula": "\u2200 c \u2208 COUPONS. price_pr4(c) == price_pr3(c)", "label": "Refuted", "checked": 3, "assumptions": ["coupons are read from shop/coupons.py"], "note": "", "scope_note": "", "example": "The VIP coupon was worth 60% off (price 40). It now gives 50.", "stage": 2, "witnesses": [{"c": "VIP"}], "n_witnesses": 1, "command": "python toy/review.py --check B1"}, {"id": "B2", "short": "README (PR #2): VIP = 60% off", "rule": "R-DOC", "claim": "README since PR #2: \"VIP coupon: 60% off.\"", "origin": "sentence from PR #2", "plain": "A promise to customers, made two PRs ago.", "formula": "README \u21d4 B1", "label": "Refuted", "checked": 0, "assumptions": ["coupons are read from shop/coupons.py"], "note": "derived: this sentence restates B1, so it inherits its verdict (R-DOC)", "scope_note": "", "example": "The README still tells customers 60% off. The code now delivers 50%.", "stage": 2, "witnesses": [{"c": "VIP"}], "n_witnesses": 1, "command": "python toy/review.py --check B2"}, {"id": "T1", "short": "unit tests pass", "rule": "R-TEST", "claim": "The repository's unit tests pass on PR #4.", "origin": "CI-style gate", "plain": "The tests are green.", "formula": "\u2200 c \u2208 TEST_RUN. tests pass", "label": "Tested", "checked": 1, "assumptions": [], "note": "", "scope_note": "Examples only. The tests run just these baskets: [('', 1, False), ('HALF', 1, False)].", "example": "", "stage": 2, "witnesses": [], "n_witnesses": 0, "command": "python toy/review.py --check T1"}, {"id": "T2", "short": "tests would catch A1", "rule": "R-TEST", "claim": "The existing tests would have caught the baskets that make A1 fail.", "origin": "tests were added in PR #3", "plain": "Why is the build green if the patch is wrong?", "formula": "\u2200 w \u2208 WITNESSES(A1). a test runs w", "label": "Refuted", "checked": 2, "assumptions": ["the counterexamples found for A1"], "note": "", "scope_note": "", "example": "No test uses a HALF coupon, 10 items, a member, so the build stays green.", "stage": 2, "witnesses": [{"w": ["HALF", 10, true]}, {"w": ["VIP", 10, true]}], "n_witnesses": 2, "command": "python toy/review.py --check T2"}, {"id": "U1", "short": "stacking all three is intended", "rule": "R-HUMAN", "claim": "Letting coupon + bulk + member discounts all stack is what the business wants.", "origin": "README line from PR #3: 'Discounts add up'", "plain": "Maybe the real fix is not a cap at all.", "formula": "intended(stacking)", "label": "Unknown", "checked": 1, "assumptions": [], "note": "a business decision; code cannot decide it. A human must.", "scope_note": "", "example": "", "stage": 2, "witnesses": [], "n_witnesses": 0, "command": "python toy/review.py --check U1"}, {"id": "D1", "short": "loyalty points never negative", "rule": "R-CALL", "claim": "checkout() awards 1 loyalty point per 10 spent: points >= 0.", "origin": "checkout() calls final_price (found by parsing, 1 hop away)", "plain": "A negative total quietly takes points away from the customer.", "formula": "\u2200 w \u2208 WITNESSES(A1). points(w) >= 0", "label": "Refuted", "checked": 2, "assumptions": ["only the baskets that already broke A1"], "note": "", "scope_note": "", "example": "Same shopper (a HALF coupon, 10 items, a member): total -100, loyalty points -10.", "stage": 3, "witnesses": [{"w": ["HALF", 10, true]}, {"w": ["VIP", 10, true]}], "n_witnesses": 2, "command": "python toy/review.py --check D1"}, {"id": "D2", "short": "a sale never lowers revenue", "rule": "R-CALL", "claim": "ledger.post_sale() records a sale: revenue never goes down.", "origin": "post_sale() calls final_price (found by parsing, 2 hops away)", "plain": "A negative sale makes the shop's books go down on a sale.", "formula": "\u2200 w \u2208 WITNESSES(A1). revenue_after(w) >= revenue_before", "label": "Refuted", "checked": 2, "assumptions": ["only the baskets that already broke A1"], "note": "", "scope_note": "", "example": "Same shopper: revenue goes from 1000 to 900 after a sale.", "stage": 3, "witnesses": [{"w": ["HALF", 10, true]}, {"w": ["VIP", 10, true]}], "n_witnesses": 2, "command": "python toy/review.py --check D2"}], "files": {"shop/prices.py": [{"n": 1, "text": "MAX_DISCOUNT = 0.5  # no single discount may take more than half off", "changed": true, "claims": ["A1", "P1", "B1", "U1"]}, {"n": 2, "text": "", "changed": true, "claims": []}, {"n": 3, "text": "", "changed": true, "claims": []}, {"n": 4, "text": "def final_price(base, discounts):", "changed": false, "claims": []}, {"n": 5, "text": "    \"\"\"Price after discounts. A discount of 0.2 means 20% off.\"\"\"", "changed": false, "claims": []}, {"n": 6, "text": "    capped = [min(d, MAX_DISCOUNT) for d in discounts]", "changed": true, "claims": ["A1", "P1", "B1", "U1"]}, {"n": 7, "text": "    return base * (1 - sum(capped))", "changed": true, "claims": ["A1", "P1", "B1", "U1"]}], "README.md": [{"n": 1, "text": "# shop", "changed": false, "claims": []}, {"n": 2, "text": "Prices with discounts.", "changed": false, "claims": []}, {"n": 3, "text": "VIP coupon: 60% off.", "changed": false, "claims": []}, {"n": 4, "text": "Discounts add up: coupon + bulk (10+ items) + member.", "changed": false, "claims": []}, {"n": 5, "text": "Prices can never go negative.", "changed": true, "claims": ["A2"]}]}, "nodes": [["PR1", "PR #1", "final_price", "pr", 0, 2], ["PR2", "PR #2", "coupons", "pr", 0, 2], ["PR3", "PR #3", "checkout, tests", "pr", 0, 2], ["PR4", "PR #4 (AI patch)", "under review", "cur", 0, 0], ["fp", "prices.final_price", "changed by PR #4", "code", 1, 0], ["rd4", "README.md", "new sentence (PR #4)", "code", 1, 0], ["cp", "coupons.py", "VIP = 60% (PR #2)", "code", 1, 2], ["rd2", "README promise", "VIP: 60% off (PR #2)", "code", 1, 2], ["bm", "bulk + member", "discounts (PR #3)", "code", 1, 2], ["ts", "tests", "run 2 baskets (PR #3)", "code", 1, 2], ["co", "checkout()", "calls final_price", "code", 1, 3], ["lg", "ledger.post_sale()", "calls checkout()", "code", 1, 3], ["A1", "A1 price never negative", "", "claim", 2, 1], ["A2", "A2 README: 'never negative'", "", "claim", 2, 1], ["P1", "P1 no-coupon baskets unchanged", "", "claim", 2, 1], ["B1", "B1 cap changes no coupon", "", "claim", 2, 2], ["B2", "B2 README (PR #2): VIP = 60% off", "", "claim", 2, 2], ["T1", "T1 unit tests pass", "", "claim", 2, 2], ["T2", "T2 tests would catch A1", "", "claim", 2, 2], ["U1", "U1 stacking all three is intended", "", "claim", 2, 2], ["D1", "D1 loyalty points never negative", "", "claim", 2, 3], ["D2", "D2 a sale never lowers revenue", "", "claim", 2, 3], ["VA1", "Refuted", "A1", "ver", 3, 4], ["VA2", "Refuted", "A2", "ver", 3, 4], ["VP1", "Proved within scope", "P1", "ver", 3, 4], ["VB1", "Refuted", "B1", "ver", 3, 4], ["VB2", "Refuted", "B2", "ver", 3, 4], ["VT1", "Tested", "T1", "ver", 3, 4], ["VT2", "Refuted", "T2", "ver", 3, 4], ["VU1", "Unknown", "U1", "ver", 3, 4], ["VD1", "Refuted", "D1", "ver", 3, 4], ["VD2", "Refuted", "D2", "ver", 3, 4]], "edges": [["PR4", "fp", "touch", 0], ["PR4", "rd4", "touch", 0], ["fp", "A1", "claim", 1], ["fp", "P1", "claim", 1], ["rd4", "A2", "claim", 1], ["A1", "A2", "derive", 1], ["PR2", "cp", "hist", 2], ["PR2", "rd2", "hist", 2], ["PR3", "bm", "hist", 2], ["PR3", "ts", "hist", 2], ["PR1", "fp", "hist", 2], ["cp", "B1", "claim", 2], ["fp", "B1", "claim", 2], ["rd2", "B2", "claim", 2], ["B1", "B2", "derive", 2], ["bm", "A1", "domain", 2], ["bm", "U1", "claim", 2], ["ts", "T1", "claim", 2], ["ts", "T2", "claim", 2], ["A1", "T2", "derive", 2], ["PR3", "co", "hist", 3], ["fp", "co", "calls", 3], ["co", "lg", "calls", 3], ["co", "D1", "claim", 3], ["lg", "D2", "claim", 3], ["A1", "D1", "derive", 3], ["A1", "D2", "derive", 3], ["A1", "VA1", "verdict", 4], ["A2", "VA2", "verdict", 4], ["P1", "VP1", "verdict", 4], ["B1", "VB1", "verdict", 4], ["B2", "VB2", "verdict", 4], ["T1", "VT1", "verdict", 4], ["T2", "VT2", "verdict", 4], ["U1", "VU1", "verdict", 4], ["D1", "VD1", "verdict", 4], ["D2", "VD2", "verdict", 4]], "rules": {"R-RUN": "A claim is only true or false because code was executed.", "R-HIST": "A promise made by an earlier PR is a test for every later PR.", "R-CALL": "If a function's promise is refuted, every function that calls it is re-checked on the same counterexample.", "R-DOC": "A sentence in the docs inherits the verdict of the code claim it restates.", "R-TEST": "A passing test only speaks for the inputs it actually runs.", "R-HUMAN": "Questions of intent are not decidable by code. They go to a person."}, "chain": [["final_price", 0], ["checkout", 1], ["post_sale", 2]], "base": 100, "log": ["aa40be6|PR #4: cap discounts (AI patch)", "1e5307b|PR #3: bulk, member, checkout, ledger, tests", "570018d|PR #2: coupons", "dd84922|PR #1: final_price"]};
+const L=l=>l.startsWith("Proved")?"Proved":l;
+const COL={Refuted:"#ef4444",Proved:"#22c55e",Tested:"#0ea5e9",Unknown:"#94a3b8"};
+const claims=Object.fromEntries(D.claims.map(c=>[c.id,c]));
+const X=[85,300,535,735],W={0:130,1:178,2:215,3:0},GAP=62,TOP=62;
+const N=D.nodes.map(([id,label,sub,kind,col,stage])=>({id,label,sub,kind,col,stage}));
+const byCol={};N.forEach(n=>{(byCol[n.col]=byCol[n.col]||[]).push(n)});
+// verdict + claim rows follow claim order; others by order in list
+Object.values(byCol).forEach(a=>a.forEach((n,i)=>{n.y=TOP+i*GAP}));
+const H=TOP+Math.max(...Object.values(byCol).map(a=>a.length))*GAP;
+const svg=document.getElementById("g");svg.setAttribute("viewBox",`0 0 840 ${H}`);
+const NS="http://www.w3.org/2000/svg",el=(t,a,p=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e};
+const defs=el("defs",{}),mk=el("marker",{id:"ah",viewBox:"0 0 8 8",refX:7,refY:4,markerWidth:6,markerHeight:6,orient:"auto"},defs);el("path",{d:"M0,0 L8,4 L0,8z",fill:"#8d98b0"},mk);
+[["HISTORY",0],["CODE",1],["CLAIMS",2],["VERDICTS",3]].forEach(([t,c])=>{el("text",{x:X[c],y:22,"text-anchor":"middle",class:"col"}).textContent=t});
+const P={};N.forEach(n=>P[n.id]=n);
+const ECOL={touch:"#8d98b0",hist:"#7b8fe0",derive:"#f59e0b",claim:"#14b8a6",domain:"#7b8fe0",calls:"#e879f9",verdict:"#55627f"};
+const eg=el("g",{}),ng=el("g",{}),EE=[],NE={};
+D.edges.forEach(([a,b,t,st])=>{const A=P[a],B=P[b];if(!A||!B)return;
+ const x1=X[A.col]+W[A.col]/2,x2=X[B.col]-(B.kind=="ver"?21:W[B.col]/2),y1=A.y+14,y2=B.y+14;
+ const same=A.col==B.col;
+ const bx=X[A.col]-W[A.col]/2-(A.col==2?0:0),d=same?`M${bx},${y1} C${bx-55},${y1} ${bx-55},${y2} ${bx},${y2}`:`M${x1},${y1} C${x1+45},${y1} ${x2-45},${y2} ${x2},${y2}`;
+ const p=el("path",{d,class:"edge",stroke:ECOL[t],"stroke-width":t=="calls"?2.2:1.5,"stroke-dasharray":t=="hist"||t=="domain"?"5 4":t=="derive"?"2 3":"0","marker-end":"url(#ah)"},eg);
+ EE.push([p,st])});
+N.forEach(n=>{const g=el("g",{class:"node"},ng),x=X[n.col],y=n.y+14;let s;
+ if(n.kind=="ver"){s=el("circle",{cx:x,cy:y,r:19},g);el("text",{x:x+27,y:y+4},g).textContent=L(n.label).toUpperCase()}
+ else{const w=W[n.col];s=el("rect",{x:x-w/2,y:y-17,width:w,height:34,rx:n.kind=="pr"||n.kind=="cur"?17:6},g);
+  el("text",{x,y:y+(n.sub?-2:4),"text-anchor":"middle"},g).textContent=n.label.length>36?n.label.slice(0,35)+"…":n.label;
+  if(n.sub)el("text",{x,y:y+10,"text-anchor":"middle",style:"fill:#8d98b0;font-size:9.5px"},g).textContent=n.sub}
+ const sty={pr:["#2c3550","#64748b"],cur:["#4b2a74","#a855f7"],code:["#0f3f3b","#14b8a6"],claim:["#3a2c10","#f59e0b"]}[n.kind];
+ if(sty){s.setAttribute("fill",sty[0]);s.setAttribute("stroke",sty[1]);s.setAttribute("stroke-width",n.kind=="cur"?2.5:1.5)}
+ g.onclick=()=>pick(n.id);NE[n.id]={g,s,n}});
+const CAP=[
+ ["1. Just the diff","<b>What a normal reviewer sees:</b> PR #4 changes one function and one README line. The tests pass. <span class=q>Question: is the price really never negative now?</span> With only the diff there is nothing to say: <b>0 findings</b>."],
+ ["2. Claims in the diff","The changed lines <b>make claims</b> (amber): <i>“price never negative”</i> (A1), the README repeats it (A2), and ordinary shoppers are untouched (P1). They are <b>not checked yet</b>, so they stay unlabeled."],
+ ["3. Look back at old PRs","<b>The history is evidence.</b> PR #2 promised <i>“VIP coupon: 60% off”</i>; PR #3 added more discounts that stack; PR #3's tests run only two baskets. The graph pulls these in (<span style='color:#7b8fe0'>dashed</span>) and writes <b>new claims</b> the diff never mentioned: does the cap break an old promise (B1)? would the tests notice (T2)? is stacking even intended (U1)?"],
+ ["4. Look deeper: who calls it?","The code is <b>parsed</b> to find every function that calls <code>final_price</code>: <b>checkout()</b> directly, and <b>post_sale()</b> through it. If <code>final_price</code> can be wrong, so can they. Each is <b>re-checked on the same bad basket</b> (<span style='color:#e879f9'>pink</span> edges) — two more problems, found without anyone suspecting them."],
+ ["5. Run the checkers","Every claim is a formula, <b>executed</b> against the code. Colors are verdicts, not opinions. One falsified assumption became <b>a family of findings</b> across the diff, history, and callers."]];
+let stage=0;const steps=document.getElementById("steps");
+CAP.forEach((c,i)=>{const b=document.createElement("button");b.textContent=c[0];b.onclick=()=>setStage(i);steps.appendChild(b)});
+function setStage(s){stage=s;[...steps.children].forEach((b,i)=>b.classList.toggle("on",i==s));
+ document.getElementById("cap").innerHTML=CAP[s][1];let sites=0,cl=0,ref=0,prf=0;
+ for(const id in NE){const o=NE[id],n=o.n,show=n.stage<=s;o.g.classList.toggle("hide",!show);
+  if(show&&n.kind=="code")sites++;
+  if(n.kind=="claim"){if(show)cl++;const c=claims[id];
+   if(s>=4){o.s.setAttribute("stroke",COL[L(c.label)]);o.s.setAttribute("stroke-width",2.6);o.s.setAttribute("fill","#1b2236")}else{o.s.setAttribute("stroke","#f59e0b");o.s.setAttribute("stroke-width",1.5);o.s.setAttribute("fill","#3a2c10")}}
+  if(n.kind=="ver"){const c=claims[n.sub];o.s.setAttribute("fill",COL[L(c.label)]);o.s.setAttribute("stroke","#0b101a");if(show&&c.label=="Refuted")ref++;if(show&&L(c.label)=="Proved")prf++}}
+ EE.forEach(([p,st])=>p.classList.toggle("hide",st>s));
+ document.getElementById("stats").innerHTML=`<span><b>${sites}</b> pieces of code looked at</span><span><b>${cl}</b> claims</span><span><b>${ref}</b> refuted</span><span><b>${prf}</b> proved in scope</span>`;
+ document.querySelectorAll(".chip").forEach(c=>c.style.visibility=s>=1?"visible":"hidden")}
+document.getElementById("legend").innerHTML=[["#a855f7","The PR under review"],["#64748b","Earlier PR (history)"],["#14b8a6","Code or docs"],["#f59e0b","Claim (amber until checked)"],
+["#ef4444","REFUTED — a counterexample exists"],["#22c55e","PROVED WITHIN SCOPE — every case, stated limits"],["#0ea5e9","TESTED — examples pass, others remain"],["#94a3b8","UNKNOWN — code cannot decide"],
+["#7b8fe0","dashed edge: pulled in from history"],["#e879f9","pink edge: caller found by parsing"],["#f59e0b","dotted edge: derived by a rule"],["#14b8a6","solid: where a claim came from"]]
+.map(([c,t])=>`<div><span class="sw" style="background:${c}"></span>${t}</div>`).join("");
+// code view
+const code=document.getElementById("code");let sel=null;
+for(const f in D.files){const h=document.createElement("div");h.className="k";h.textContent=f;code.appendChild(h);const box=document.createElement("div");box.className="code";code.appendChild(box);
+ for(const l of D.files[f]){const d=document.createElement("div");d.className="ln"+(l.changed?" ch":"")+(l.claims.length?" link":"");
+  d.innerHTML=`<span class="n">${l.n}</span><span>${l.text.replace(/&/g,"&amp;").replace(/</g,"&lt;")||" "}</span>`;
+  l.claims.forEach(id=>{const c=document.createElement("span");c.className="chip";c.textContent=id;c.style.background=COL[L(claims[id].label)];d.appendChild(c)});
+  if(l.claims.length)d.onclick=()=>{if(sel)sel.classList.remove("sel");sel=d;d.classList.add("sel");showLine(f,l)};box.appendChild(d)}}
+// panel
+const panel=document.getElementById("panel");
+const badge=c=>`<span class="badge b-${L(c.label)}">${c.label.toUpperCase()}</span>`;
+const wit=w=>Object.values(w).map(v=>Array.isArray(v)?v.map(x=>x===""?"no coupon":x===true?"member":x===false?"non-member":x).join(", "):v).join(" | ");
+function chainHtml(c){if(c.rule!="R-CALL")return"";const ch=D.chain.map(([n],i)=>`<span class="f ${i<=(c.id=="D1"?1:2)?"bad":""}">${n}()</span>`);
+ return `<div class="k">How the problem travels</div><div class="chain">${ch.join(" ← ")}</div><div class="small">final_price is refuted (A1), so every function above it that calls it inherits the doubt.</div>`}
+function proof(c){const linked=[];for(const f in D.files)D.files[f].forEach(l=>{if(l.claims.includes(c.id))linked.push(`${f.split("/").pop()}:${l.n}`)});
+ let h=`<h3>${c.id} · ${c.short} ${badge(c)}</h3><div class="say"><b>In plain words:</b> ${c.plain}</div>`;
+ if(c.example)h+=`<div class="ex"><b>Concrete example:</b> ${c.example}</div>`;
+ h+=chainHtml(c)+`<div class="k">Claim</div><div>${c.claim}</div><div class="k">As logic</div><pre>${c.formula}</pre>
+ <div class="k">Rule used</div><div><b>${c.rule}</b> — ${D.rules[c.rule]}</div>`;
+ if(c.note)h+=`<div class="k">Derivation</div><div>${c.note}</div>`;
+ if(c.label=="Refuted")h+=`<div class="k">Counterexamples (${c.n_witnesses})</div><pre>${c.witnesses.slice(0,6).map(wit).join("\n")||"(derived — see above)"}</pre>`;
+ if(L(c.label)=="Proved")h+=`<div class="k">Proved only under</div><pre>${c.assumptions.join("\n")}\n${c.checked} cases checked</pre><div class="small">Says nothing about other prices or inputs.</div>`;
+ if(c.label=="Tested")h+=`<div class="k">What this does NOT show</div><div>${c.scope_note}</div>`;
+ if(c.label=="Unknown")h+=`<div class="k">Why unknown</div><div>${c.note}</div>`;
+ h+=`<div class="k">Came from</div><div>${c.origin}</div><div class="k">Patch lines linked to this proof</div><div>${linked.join(", ")||"none — it is about code outside the diff"}</div>
+ <div class="k">Re-run it</div><pre>${c.command}   # commit ${D.pr4}</pre>`;return h}
+const PEND=`<div class="pend"><b>Human decision: PENDING.</b> The AI recommends <i>request changes</i>. It cannot approve this PR or decide whether stacking discounts is intended.</div>`;
+function showLine(f,l){const cs=l.claims.map(i=>claims[i]);
+ panel.innerHTML=`<div class="small">${f}:${l.n}</div><pre>${l.text}</pre><div class="small">This line takes part in ${cs.length} claim(s). Proofs are shared, not copied.</div>`+cs.map(c=>`<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">`+proof(c)).join("")+PEND;hi(l.claims)}
+function hi(ids){for(const id in NE)NE[id].g.classList.toggle("hl",ids.includes(id)||ids.includes(NE[id].n.sub))}
+const INFO={PR4:"The AI patch under review: one function and one README line. Tests green.",fp:"final_price(): PR #1 wrote it, PR #4 changed it to cap each discount at 50%.",
+ rd4:"PR #4 added the sentence “Prices can never go negative.”",cp:"PR #2: coupons WELCOME 10%, HALF 50%, VIP 60%.",rd2:"PR #2 promised customers “VIP coupon: 60% off.”",
+ bm:"PR #3 added bulk (40% for 10+ items) and member (20%) discounts. They <b>add up</b> with the coupon — this is the real source of the overshoot.",
+ ts:"PR #3's tests only run two baskets: HALF×1 and no-coupon×1. Neither can go negative, so the build stays green.",
+ co:"checkout() turns discounts into a total and awards loyalty points. Found by parsing: it calls final_price.",lg:"post_sale() adds a sale to revenue. Found by parsing: it calls checkout(), which calls final_price — two hops away.",
+ PR1:"PR #1 introduced final_price and rule R-1.",PR2:"PR #2 introduced coupons.",PR3:"PR #3 introduced bulk/member discounts, checkout(), the ledger, and the tests."};
+function pick(id){const o=NE[id],n=o.n;
+ if(n.kind=="claim"||n.kind=="ver"){const c=claims[n.kind=="ver"?n.sub:id];
+  panel.innerHTML=(stage>=4?proof(c):`<h3>${c.id} · ${c.short} <span class="badge b-Unknown">UNCHECKED</span></h3><div class="say"><b>In plain words:</b> ${c.plain}</div><div class="k">Claim</div><div>${c.claim}</div><div class="k">Came from</div><div>${c.origin}</div><div class="small" style="margin-top:8px">Go to step 5 to see its verdict.</div>`)+PEND;hi([c.id]);return}
+ panel.innerHTML=`<h3>${n.label}</h3><div>${INFO[id]||""}</div>`;hi([id])}
+panel.innerHTML=`<h3>How to read this</h3><div class="small">1. Press the five steps above the graph, left to right.<br>2. Click any box, or any green line of the patch.<br>3. A verdict only ever comes from running code. Each panel shows how to re-run it.</div>${PEND}`;
+{const [st,pk]=location.hash.slice(1).split(":");setStage(+(st||0));if(pk)pick(pk)}
+</script></body></html>

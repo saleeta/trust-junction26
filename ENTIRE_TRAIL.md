@@ -30,6 +30,7 @@ Entire product for the collaboration layer:
 | **Graph** (codebase mapping, search instead of blind file reads) | context tree (issue → diff files/hunks → assumptions → sites → hypotheses + capsule); lookup paths and propagation re-traversals; token cost per walk measured | `trust/tree/context_tree.py`, `trust/memory/recall.py` |
 | **Brain** (persistent reasoning, past decisions) | memory store over session decisions and verified lessons (CONCEPT_CARD.md failure-mode table); falsified-assumption patterns reusable across branches | `trust/memory/`, `trust/assumptions/engine.py` |
 | **Trails** (agent works → review: does the change match intent?) | the core loop: requirement → base/target resolution → assumption ledger → compile probes → evidence receipt with AI recommendation, refusals, unchecked areas, pending human decision | `trust/review/`, `demo/review-2297.html` |
+| **Proof-carrying review** (claims, rules, verdicts) | every changed line links to one claim; a checker decides each claim with an honest label - PROVED_IN_SCOPE / REFUTED (with a witness) / TESTED / UNKNOWN - and re-runnable evidence; the formal obligation for #2297 is REFUTED with witness net472/netstandard2.0 | `trust/proof/proof_review.py`, `.trust/findings/2297-proof.json` |
 | **Token efficiency (measured)** | full dump vs triaged vs retrieval/tree walk, dry-run token accounting; on the 237-file patch: 79.2k → 5.6k → 2.3–2.5k tokens | `trust/ab/llm_arm.py`, `trust/tree/` |
 
 The MongoDB Atlas challenge track is the storage backend for the same tree

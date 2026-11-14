@@ -1,9 +1,23 @@
 # Two-minute stage presentation
 
-Open [demo/presentation.html](demo/presentation.html) before the timer starts.
-It is a self-contained interactive deck built from the pipeline's real
-artifacts: arrow keys navigate, click assumption cards to expand, click a
-command line to copy it. If the artifacts are stale, rebuild first:
+Open the new [concept deck](demo/concept-deck.html) before the timer starts.
+It is a self-contained, five-slide HTML presentation. Arrow keys navigate;
+**N** shows speaker notes. Click the review-flow nodes, target frameworks,
+changed lines, and Entire capabilities to explain the idea visually.
+The #2297 evidence on slide 3 comes from the working review receipt;
+slide 4 is explicitly labelled as a proposed proof-carrying interface.
+
+| Time | Stage action and line |
+|---|---|
+| 0–15 s | Slide 1. “AI wrote the patch. Who checks the AI? We make every important review claim traceable to a check and a human decision.” |
+| 15–39 s | Slide 2. Click **Intent → Impact → Claims → Checks → Receipt → Human**. “This is the review contract. A model cannot silently turn missing evidence into approval.” |
+| 39–74 s | Slide 3. Click **net472**, then **netstandard2.0**. “The 237-file #2297 patch excludes two shipped targets from the attribute the issue requested for all generated code. Our compile probes show the attribute is available there.” |
+| 74–99 s | Slide 4. Click the `#if` line, then the attribute line. “This is the next step: each change links to a scoped claim and its proof, counterexample, test, or unknown status. We have a counterexample here, not a proof of the whole library.” |
+| 99–120 s | Slide 5. Click **Graph** and **Trail**. “Entire keeps the context and code map beside the receipt. The AI recommends changes; the named engineer owns the final decision. This one remains pending.” |
+
+Use the older [technical walkthrough](demo/presentation.html) for questions
+after the pitch. It is built from pipeline artifacts. If those artifacts are
+stale, rebuild the technical walkthrough first:
 
 ```bash
 python present.py            # runs the pipeline if needed, then builds the deck

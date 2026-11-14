@@ -47,6 +47,7 @@ def load_artifacts(root: Path) -> dict:
         "llm": load_json(root / ".trust" / "ab" / "2297-llm.json"),
         "tree": load_json(root / ".trust" / "tree" / "2297-tree.json"),
         "review": load_json(root / "demo" / "review-2297.json"),
+        "proof": load_json(root / ".trust" / "findings" / "2297-proof.json"),
     }
 
 
@@ -406,11 +407,248 @@ def s_trail(d: dict) -> str:
     The token numbers are measured; the decision belongs to a named human.</p>"""
 
 
+# ---------------------------------------------------------------------------
+# Part 1: the small sandbox - how the graph works, on a toy example
+# ---------------------------------------------------------------------------
+
+def s_small(_d: dict) -> str:
+    return """
+    <h2>Start small: a three-file toy project</h2>
+    <div class="sandboxnote">toy example - mechanics only, not a real finding</div>
+    <div class="split">
+      <div class="card code">
+        <h3>store.py</h3>
+<pre>items = {}
+def put(k, v): items[k] = v
+def get(k):    return items[k]</pre>
+      </div>
+      <div class="card code">
+        <h3>checkout.py</h3>
+<pre>def total(cart):
+    s = 0
+    for k in cart:
+        s += store.get(k).price   # &lt;- assumes every key exists
+    return s</pre>
+      </div>
+      <div class="card code">
+        <h3>tests</h3>
+<pre>assert total({"a": 2}) == 12   # passes
+# no test for a missing key</pre>
+      </div>
+    </div>
+    <p>Everything the review system does is easier to see here than in a
+    237-file patch. Next: how this toy becomes a graph.</p>"""
+
+
+def s_graph_made(_d: dict) -> str:
+    return """
+    <h2>How the graph is made - step by step</h2>
+    <div class="steps" id="gmsteps">
+      <div class="stepcard"><h3>1 · the session records what happened</h3>
+        <p class="dim">a transcript: human prompt &rarr; tool call &rarr; file edit &rarr; commit</p>
+        <code>prompt "add checkout total" · Edit checkout.py · git commit 9f3c</code></div>
+      <div class="stepcard"><h3>2 · records become nodes</h3>
+        <p>one node per fact, with its provenance: <span class="chip">PROMPT</span>
+        <span class="chip">TOOL_CALL</span> <span class="chip">FILE</span>
+        <span class="chip">COMMIT</span></p></div>
+      <div class="stepcard"><h3>3 · edges connect them</h3>
+        <p><span class="edge">caused</span> prompt&rarr;call ·
+        <span class="edge">writes</span> call&rarr;file ·
+        <span class="edge">inspects</span> call&rarr;commit</p></div>
+      <div class="stepcard"><h3>4 · fused with real git history</h3>
+        <p><span class="edge">parent_of</span> commit&rarr;base commit, so the graph answers
+        &ldquo;what was this change built on?&rdquo; from git, not from memory</p></div>
+    </div>
+    <div class="center"><button onclick="step('gmsteps',1)">step 1</button>
+      <button onclick="step('gmsteps',2)">step 2</button>
+      <button onclick="step('gmsteps',3)">step 3</button>
+      <button onclick="step('gmsteps',4)">all</button></div>"""
+
+
+def s_colors(_d: dict) -> str:
+    return """
+    <h2>What the colors mean</h2>
+    <div class="split">
+      <div class="card">
+        <h3><span class="legend p0"></span> blue - the lookup path</h3>
+        <p>The question enters the graph at one node; only the path from the
+        root to that node is opened. Everything else stays unread.</p>
+      </div>
+      <div class="card">
+        <h3><span class="legend p1"></span> red - falsification propagation</h3>
+        <p>When a claim is falsified, the walk re-enters the graph and visits
+        everything that claim was load-bearing for - its blast radius.</p>
+      </div>
+      <div class="card">
+        <h3><span class="legend both"></span> purple - revisited</h3>
+        <p>A node already seen by an earlier pass and touched again - the
+        &ldquo;recurring traversal&rdquo; signal, counted per pass.</p>
+      </div>
+      <div class="card">
+        <h3>token chip on every node</h3>
+        <p>Each node costs what its text costs. The walk's total is the sum of
+        what was actually opened - not the whole graph.</p>
+      </div>
+    </div>"""
+
+
+def s_history(_d: dict) -> str:
+    return """
+    <h2>Current PR vs previous PRs - history does the routing</h2>
+    <div class="sandboxnote">toy example - mechanics only</div>
+    <div class="split">
+      <div class="card">
+        <h3>Previous PR #41 fixed the same region</h3>
+        <p><code>checkout.py:4</code> once crashed on a missing key; PR #41 added
+        <code>store.get(k, 0)</code>. The graph records that fix as a commit node
+        with <span class="edge">parent_of</span> edges to today's code.</p>
+        <p class="dim">commit 41a7c2 &ldquo;fix KeyError in checkout.total&rdquo; &rarr; today's line 4</p>
+      </div>
+      <div class="card bad">
+        <h3>Current PR #58 touches the same line</h3>
+        <p>The graph routes the reviewer to the history: &ldquo;this region was
+        fragile before; what changed?&rdquo; The new code inlines the lookup again
+        without the default.</p>
+        <p>Reviewer is pre-aimed at exactly the line the previous bug lived on -
+        <b>before</b> reading the rest of the diff.</p>
+      </div>
+    </div>
+    <p class="dim center">History edges turn &ldquo;read everything&rdquo; into
+    &ldquo;check where it broke before&rdquo;. The checker still has to prove the
+    claim - the graph only chooses where to look.</p>"""
+
+
+def s_expand(_d: dict) -> str:
+    return """
+    <h2>How a falsified claim expands the search space</h2>
+    <div class="steps" id="exsteps">
+      <div class="stepcard"><h3>1 · one falsified assumption</h3>
+        <p class="dim">&ldquo;the attribute is unavailable on netstandard2.0 and net472&rdquo; - false,
+        proved by a compile probe.</p></div>
+      <div class="stepcard"><h3>2 · its footprint predicate searches the whole change</h3>
+        <p class="dim">every file carrying the same guard, every shipped target framework,
+        every snapshot that baked the guard in.</p></div>
+      <div class="stepcard"><h3>3 · impact sites are facts</h3>
+        <p>2 shipped frameworks · 6 templates · 220 snapshots = <b>228 sites</b></p></div>
+      <div class="stepcard"><h3>4 · each site becomes a pre-aimed hypothesis</h3>
+        <p class="dim">feature absent on net472 · tests codify the gap · regeneration will
+        re-emit the guard - labelled hypotheses, never findings.</p></div>
+    </div>
+    <div class="center"><button onclick="step('exsteps',1)">step 1</button>
+      <button onclick="step('exsteps',2)">step 2</button>
+      <button onclick="step('exsteps',3)">step 3</button>
+      <button onclick="step('exsteps',4)">all</button></div>
+    <p class="dim center">One falsified claim finds problems nobody asked about -
+    and the deck states which are facts and which are suspicions.</p>"""
+
+
+# ---------------------------------------------------------------------------
+# Part 2: the real PR, proof-carrying
+# ---------------------------------------------------------------------------
+
+def s_proof(d: dict) -> str:
+    proof = d.get("proof") or {}
+    if not proof:
+        return ("<h2>Proof-carrying review</h2><p>run the pipeline first - "
+                "2297-proof.json missing</p>")
+    req = proof.get("requirement") or {}
+    claims = proof.get("claims") or []
+    results = proof.get("results") or []
+    legend = proof.get("label_legend") or {}
+
+    # the centerpiece: the first claim, its rule, and its result
+    c1 = next((c for c in claims if c.get("id") == "C-2297-1"), claims[0] if claims else {})
+    r1 = next((r for r in results if r.get("claim") == c1.get("id")
+               and r.get("verdict") == "REFUTED"), None)
+    lines_html = ""
+    for i, link in enumerate(c1.get("line_links", [])[:9]):
+        lines_html += (f"<div class='lineitem' onclick='showDetail({i})' "
+                       f"data-i='{i}'>"
+                       f"<span class='ln'>{esc(link.get('line'))}</span>"
+                       f"<span class='lt'>{esc(link.get('text', ''))}</span>"
+                       f"<span class='lp'>{esc(link.get('file', ''))}</span></div>")
+    details_html = ""
+    rv = r1 or {}
+    verdict_word = rv.get("verdict", "?")
+    chip_cls = "bad" if verdict_word == "REFUTED" else "ok"
+    witness_raw = rv.get("witness", {}) or {}
+    witness_text = witness_raw.get("detail", "") or witness_raw.get("tfm", "")
+    rule_rec = next((r for r in proof.get("rules", [])
+                     if r.get("id") == rv.get("rule")), {}) or {}
+    rule_text = rule_rec.get("checker", "")
+    for i, link in enumerate(c1.get("line_links", [])[:9]):
+        ev_html = ""
+        for e in rv.get("evidence", []):
+            if e.get("kind") in ("command", "checker_output"):
+                ev_html += (f"<div class='cmdline' onclick='copyCmd(event, this)'>"
+                            f"$ {esc(e.get('value', ''))[:160]}</div>")
+            else:
+                ev_html += (f"<p class='dim'>[{esc(e.get('kind'))}] "
+                            f"{esc(e.get('value', ''))[:220]}</p>")
+        style_attr = 'style="display:block"' if i == 0 else ""
+        details_html += f"""
+        <div class="proofdetail" id="pd{i}" {style_attr}>
+          <p class="dim">changed line: <code>{esc(link.get('file'))}:{esc(link.get('line'))}</code></p>
+          <div class="proofgrid">
+            <div><b>Claim</b></div><div>{esc(c1.get('id'))} - {esc(c1.get('statement'))}</div>
+            <div><b>Formal</b></div><div class="formal">{esc(c1.get('formal'))}</div>
+            <div><b>Rule</b></div><div>{esc(rule_text)}</div>
+            <div><b>Result</b></div>
+            <div><span class="chip {chip_cls}">{esc(verdict_word)}</span></div>
+            <div><b>Witness</b></div><div class="witness">{esc(witness_text)}</div>
+          </div>
+          <p class="blast">evidence - re-run it yourself</p>
+          {ev_html}
+        </div>"""
+
+    verdict_chips = ""
+    for res in results:
+        cls = {"REFUTED": "bad", "PROVED_IN_SCOPE": "ok",
+               "TESTED": "mid", "UNKNOWN": "dim"}.get(res.get("verdict"), "dim")
+        verdict_chips += (f"<div class='vrow'><span class='chip {cls}'>"
+                          f"{esc(res.get('verdict'))}</span> "
+                          f"<span>{esc(res.get('claim'))} via {esc(res.get('rule'))}</span></div>")
+
+    legend_rows = "".join(
+        f"<tr><td><b>{esc(k)}</b></td><td class='dim'>{esc(v)}</td></tr>"
+        for k, v in legend.items())
+    return f"""
+    <h2>The centerpiece: click a changed line &rarr; its proof</h2>
+    <div class="proofsplit">
+      <div class="linelist">
+        <p class="dim">changed lines of the patch - each links to one claim</p>
+        {lines_html}
+        <p class="dim">{len(c1.get('line_links', []))} guard lines across the templates
+        link to the same claim - the claim is stated once, not per line.</p>
+      </div>
+      <div class="proofpanel">
+        <div class="obligation">
+          <b>REQ-2297</b> - {esc(req.get('formal_obligation', ''))}
+          <p class="dim">assumptions: {esc('; '.join(req.get('assumptions', [])))}</p>
+        </div>
+        {details_html}
+      </div>
+    </div>
+    <h3>every verdict, honestly labelled</h3>
+    <div class="split">
+      <table class="mini"><tr><th>label</th><th>what it means</th></tr>{legend_rows}</table>
+      <div class="card"><h3>this review's ledger</h3>{verdict_chips}
+        <p class="dim">the human decision stays pending - the AI recommends
+        request changes and refuses to waive the requirement.</p></div>
+    </div>"""
+
+
 SLIDES = [
     ("The question", s_title),
-    ("The setup", s_setup),
+    ("Start small", s_small),
+    ("How the graph is made", s_graph_made),
+    ("What the colors mean", s_colors),
+    ("Current PR vs previous PRs", s_history),
+    ("Expanding the search space", s_expand),
+    ("The real PR: setup", s_setup),
     ("Before: the wrong review", s_before),
     ("After: the checked base", s_after),
+    ("Click a line, see its proof", s_proof),
     ("The hidden defect", _blast_slide),
     ("The falsification", s_probes),
     ("Tokens: before vs after", s_tokens),
@@ -511,6 +749,27 @@ nav button:hover{border-color:#4d8ff0}
 .dot.on{background:#7fb0f0}
 .counter{color:#7f8db0;font-size:12px;min-width:70px;text-align:right}
 .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:#1f5c3c;color:#eafff2;border-radius:8px;padding:7px 16px;font-size:13px;opacity:0;transition:opacity .2s;z-index:10}
+.sandboxnote{display:inline-block;background:#4d3d12;color:#ffd98a;border-radius:20px;padding:2px 12px;font-size:12px;margin-bottom:10px}
+.card.code pre{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#0b1220;border-radius:8px;padding:10px 12px;overflow:auto;color:#c9d6ef}
+.edge{color:#b08ae0;font-weight:600}
+.steps .stepcard{display:none;background:#141d33;border:1px solid #253251;border-radius:10px;padding:12px 16px;margin:8px 0}
+.steps .stepcard h3{margin:0 0 4px}
+.linelist{background:#101a30;border:1px solid #253251;border-radius:10px;padding:10px;overflow:auto;max-height:44vh}
+.lineitem{display:grid;grid-template-columns:34px 1fr;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.lineitem:hover{background:#1c2740;outline:1px solid #4d8ff0}
+.lineitem .ln{color:#7f8db0;text-align:right}
+.lineitem .lt{color:#9fd0ff}
+.lineitem .lp{grid-column:1/3;color:#7f8db0;font-size:11px;font-family:system-ui}
+.proofsplit{display:grid;grid-template-columns:420px 1fr;gap:16px}
+.proofpanel{background:#141d33;border:1px solid #253251;border-radius:12px;padding:16px}
+.obligation{background:#0b1220;border-left:3px solid #7fb0f0;border-radius:8px;padding:10px 14px;margin-bottom:12px}
+.obligation b{color:#7fb0f0}
+.proofdetail{display:none;margin-top:10px}
+.proofgrid{display:grid;grid-template-columns:90px 1fr;gap:6px 10px;font-size:13.5px;margin:8px 0}
+.proofgrid .formal{font-family:ui-monospace,Consolas,monospace;color:#9fd0ff}
+.proofgrid .witness{color:#ff9d9d;font-weight:600}
+.vrow{padding:4px 0;border-bottom:1px dotted #253251;font-size:13px}
+.chip.dim{background:#2a2f42;color:#8b94ac}
 """
 
 _JS = r"""
@@ -543,6 +802,16 @@ function copyCmd(ev,el){
     const t=document.getElementById('toast');t.textContent='copied: '+text.slice(0,60)+'…';t.style.opacity=1;
     setTimeout(()=>t.style.opacity=0,1500);
   });
+}
+function step(containerId,n){
+  const kids=document.getElementById(containerId).children;
+  for(let i=0;i<kids.length;i++){kids[i].style.display = i<n ? 'block' : 'none';}
+}
+function showDetail(i){
+  document.querySelectorAll('.proofdetail').forEach(d=>d.style.display='none');
+  const el=document.getElementById('pd'+i);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.lineitem').forEach((l,j)=>l.style.outline = j===i ? '1px solid #4d8ff0' : 'none');
 }
 """
 
