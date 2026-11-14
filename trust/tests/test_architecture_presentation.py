@@ -13,7 +13,7 @@ def test_timed_architecture_deck_and_published_copy():
     published = (ROOT / "docs/architecture-presentation.html").read_text(encoding="utf-8")
     assert source == published
     durations = [int(n) for n in re.findall(r'data-duration="(\d+)"', source)]
-    assert len(durations) == 8 and sum(durations) == 120
+    assert len(durations) == 9 and sum(durations) == 120
     for fact in ("Requirements", "Current code", "Entire", "MongoDB Atlas",
                  "$graphLookup", "CANDIDATE CLAIM", "source_kind: implicit_in_code",
                  "check_cmd:", "parent SHA", "Run check",
