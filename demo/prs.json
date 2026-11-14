@@ -1,0 +1,31 @@
+{
+  "repo": "saleeta/trust-junction26",
+  "source": "gh api (authenticated snapshot)",
+  "generated": "2026-11-14T17:54:21Z",
+  "prs": [
+    {
+      "html_url": "https://github.com/saleeta/trust-junction26/pull/1",
+      "merged_at": "2026-11-14T16:48:19Z",
+      "number": 1,
+      "title": "Base resolver, TFM-guard assumption check, and runnable demo script"
+    },
+    {
+      "html_url": "https://github.com/saleeta/trust-junction26/pull/2",
+      "merged_at": "2026-11-14T16:48:25Z",
+      "number": 2,
+      "title": "Add test suite: 87 tests, including regressions for shipped bugs"
+    },
+    {
+      "html_url": "https://github.com/saleeta/trust-junction26/pull/3",
+      "merged_at": "2026-11-14T16:48:31Z",
+      "number": 3,
+      "title": "Automate the A/B arms; withdraw a design claim the measurement disproved"
+    },
+    {
+      "html_url": "https://github.com/saleeta/trust-junction26/pull/4",
+      "merged_at": "2026-11-14T16:48:39Z",
+      "number": 4,
+      "title": "Blast-radius engine, graph retrieval, LLM cost arms, one-command demo"
+    }
+  ]
+}
