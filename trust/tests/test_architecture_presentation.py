@@ -21,6 +21,16 @@ def test_timed_architecture_deck_and_published_copy():
                  "net472", "netstandard2.0", "Human decision", "Pending."):
         assert fact.lower() in source.lower()
     assert 'href="review-2297.html"' in source
+    # the deep-dive layer: formal logic, node joins, verdict rules,
+    # codebase-wide re-checking, and the named acceptance
+    for fact in ("detailsBtn", "∀ p ∈ PRODUCTS", "harvested-from",
+                 "R-RUN", "R-CALL", "R-HIST", "one witness refutes",
+                 "PROVED IN SCOPE", "Saleeta Qadir", "unknown product",
+                 "get_price", "never crash", "counterexample"):
+        assert fact.lower() in source.lower()
+    # the old target-framework example is gone from the stage story
+    for gone in ("netstandard2.0", "net472", "ExcludeFromCodeCoverage"):
+        assert gone.lower() not in source.lower()
     script = ("new Function(require('fs').readFileSync(process.argv[1],'utf8')"
               ".split('<script>')[1].split('</script>')[0])")
     subprocess.run(["node", "-e", script, str(ROOT / "demo/architecture-presentation.html")],
