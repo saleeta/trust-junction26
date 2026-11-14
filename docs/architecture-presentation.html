@@ -26,6 +26,13 @@
 .compare{border:1px solid var(--line);background:#fffdfa;padding:4% 5%;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}.compare h2{font:normal clamp(18px,2vw,30px) Georgia,serif;margin:0 0 8px}.compare p{font-size:clamp(13px,1.25vw,19px);line-height:1.4;color:#4c6066;margin:0}.compare.dark{background:#23363e;color:#f6f5ef;border-color:#23363e}.compare.dark h2,.compare.dark p{color:#f6f5ef}
 .compare .art{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center}.compare .art svg{width:100%;height:100%;max-height:150px}.cloud{font:normal clamp(40px,6vw,96px) Georgia,serif;opacity:.4}
 .compare .mini{padding-top:10px;border-top:1px solid #bdd0d1;font:clamp(12px,1.1vw,17px)/1.4 Consolas,monospace}.compare.dark .mini{border-color:#82979b}
+.compare code{font-family:Consolas,monospace}
+.bubble{margin:10px 0 0;padding:4% 5%;background:#33505b;border-radius:14px 14px 14px 3px;font-size:clamp(13px,1.35vw,21px);line-height:1.4}.bubble b{color:#9be3bf}
+.missed{margin:auto 0 12px;padding:3% 4%;border-left:4px solid #e08a86;background:#3a2f35;font-size:clamp(12px,1.2vw,18px);line-height:1.4}.missed b{color:#f3b1ad}
+.steps{list-style:none;margin:8px 0 10px;padding:0;display:flex;flex-direction:column;gap:3.5%;flex:1 1 0;min-height:0;justify-content:center}
+.steps li{display:flex;gap:14px;align-items:flex-start;padding:2.6% 3.5%;border:1px solid var(--line);border-radius:10px;background:var(--white)}.steps li.bad{background:var(--redp);border-color:var(--red)}
+.steps .num{flex:none;width:clamp(22px,2vw,32px);height:clamp(22px,2vw,32px);border-radius:50%;background:var(--teal);color:#fff;font:700 clamp(12px,1.1vw,17px)/clamp(22px,2vw,32px) Arial;text-align:center}.steps li.bad .num{background:var(--red)}
+.steps b{display:block;font-size:clamp(13px,1.3vw,20px);margin-bottom:3px}.steps span,.steps code{font-size:clamp(12px,1.2vw,18px);line-height:1.35;color:#4c6066}.steps code{color:var(--ink);font-weight:700}.steps .red{display:inline;color:var(--red)}
 .receipt{border:1px solid #9fb7ba;background:var(--white);padding:3% 4%;display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}.receipt .req{font:700 clamp(11px,1vw,15px) Consolas,monospace;color:var(--teal)}.receipt .finding{font:normal clamp(18px,2.1vw,31px)/1.12 Georgia,serif}.receipt .line{border-top:1px solid var(--line);padding-top:8px;font-size:clamp(12px,1.15vw,18px);line-height:1.35}.receipt a,.human a{color:var(--teal)}
 .human{border:1px solid #d7cba9;background:#faf4e6;padding:5% 6%;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:0;overflow:hidden}.human .state{font:normal clamp(22px,2.8vw,42px)/1.1 Georgia,serif;color:var(--amber)}.human p{font-size:clamp(12px,1.25vw,19px);line-height:1.4;margin:0}.human strong{font:700 clamp(11px,1.05vw,15px) Consolas,monospace;color:var(--amber)}
 .controls{width:min(100%,1440px);display:flex;align-items:center;gap:8px}.controls button{border:1px solid #91a5a7;background:#fffdfa;color:var(--ink);padding:8px 12px;border-radius:3px;min-height:39px}.controls button.primary{background:var(--ink);color:#fff}.controls button:disabled{opacity:.4}.counter{font:700 13px Consolas,monospace;color:var(--muted);min-width:56px;text-align:center}.progress{height:5px;flex:1;background:#cfd9d9;border-radius:4px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:var(--teal);transition:width .25s linear}.controls .tableau-link{color:var(--teal);font-weight:700;font-size:13px;text-decoration:none;white-space:nowrap;padding:0 5px}
@@ -47,13 +54,22 @@
   </svg><div class="foot"><span>The everyday AI-coding accident: the code changes, but nobody re-checks what it promised.</span><span>14 s</span></div>
 </section>
 
-<section class="slide" data-duration="15" data-note="Our idea: don't take the AI's word for it. A normal AI review says looks safe to me - that's just an opinion, you can't check it. We turn every claim into a small test that anyone can run again. The AI can suggest claims, but only an actual run of the code decides the answer. There are just four possible answers, and I'll show them in a moment.">
-  <p class="eyebrow">02 / THE IDEA</p><h1>Don't trust the AI. Check it.</h1><p class="sub">Instead of “looks fine to me”, every claim comes with a test anyone can run again. Only a real run decides the answer.</p>
+<section class="slide" data-duration="15" data-note="Here is the same patch, reviewed two ways. On the left, a normal AI reviewer reads the code and says: looks clean, tests pass, approve. It sounds confident - but it never tried a fake product, so it missed the crash completely. On the right is our review. Step one: write down what the code must do - get_price must never crash, even for a product we don't sell. Step two: actually run it with a fake product, unicorn. Step three: look at what happened - it crashed. So the answer is: broken, and here is the proof. Anyone can run that one line and see the same crash. That's the whole idea: don't believe the AI's opinion - make it show proof.">
+  <p class="eyebrow">02 / THE IDEA</p><h1>Don't take the AI's word. Make it show proof.</h1><p class="sub">Same patch, two reviews. One gives an opinion. The other runs a test that anyone can repeat.</p>
   <div class="split">
-    <div class="compare dark reveal"><h2>Normal AI review</h2><p>“Looks safe to me.”</p><div class="art"><div class="cloud">?</div></div><div class="mini">An opinion. No proof. Nothing to re-run.</div></div>
-    <div class="compare reveal delay1"><h2>Our review</h2><p>A claim, a check you can run, and what it found.</p><div class="art"><svg viewBox="0 0 520 120" role="img" aria-label="Claim, then run it, then result"><path d="M140 60 H190 M330 60 H380" class="edge-hot"/><rect x="10" y="25" width="130" height="70" rx="8" class="node-blue"/><rect x="190" y="25" width="140" height="70" rx="8" class="node"/><rect x="380" y="25" width="130" height="70" rx="8" class="node-red"/><text x="75" y="68" text-anchor="middle" class="svg-small">Claim</text><text x="260" y="68" text-anchor="middle" class="svg-small">Run it</text><text x="445" y="68" text-anchor="middle" class="svg-small">Result</text></svg></div><div class="mini">Proof you can repeat in seconds.</div></div>
+    <div class="compare dark reveal"><h2>A normal AI review</h2>
+      <div class="bubble">“I reviewed the change to <code>get_price</code>. The code looks clean and all tests pass. <b>✓ Approve.</b>”</div>
+      <div class="missed"><b>What it missed:</b> it never tried a product the shop doesn't sell - so it never saw the crash.</div>
+      <div class="mini">Sounds sure. Shows nothing you can check.</div></div>
+    <div class="compare reveal delay1"><h2>Our review</h2>
+      <ol class="steps">
+        <li class="reveal delay2"><span class="num">1</span><div><b>Write down the promise</b><span>get_price must never crash - even for a product we don't sell.</span></div></li>
+        <li class="reveal delay3"><span class="num">2</span><div><b>Actually run it</b><code>get_price("unicorn")</code></div></li>
+        <li class="reveal delay4 bad"><span class="num">3</span><div><b>See what happened</b><span>It crashed → <b class="red">BROKEN</b>, with the proof attached.</span></div></li>
+      </ol>
+      <div class="mini">Anyone can run that one line and see the same crash.</div></div>
   </div>
-  <div class="foot"><span>The AI may suggest claims. Only running the code may answer them.</span><span>15 s</span></div>
+  <div class="foot"><span>An opinion can be wrong without anyone noticing. A test shows you.</span><span>15 s</span></div>
 </section>
 
 <section class="slide" data-duration="14" data-note="Step one: gather the evidence. We collect three things. What was promised - the requirements. What the AI actually changed - the code. And, if it was saved, the AI's own chat log from Entire, so we can see why it did it. For this patch the chat log wasn't saved, so we say that out loud instead of guessing. All of it goes into one review map. MongoDB Atlas can store the map, and an Entire Trail is where a person makes the final call.">
