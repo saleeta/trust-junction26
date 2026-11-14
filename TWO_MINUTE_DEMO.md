@@ -18,7 +18,12 @@ The repository field accepts a **public GitHub URL**. The supplied challenge
 repository loads its four AI-made branches and the checked #2297 finding.
 Other repositories load recent merged PR metadata and changed-file facts on
 selection. Their titles remain unverified candidate claims: this reference
-does not run a proof checker for arbitrary repositories.
+does not run a proof checker for arbitrary repositories. If the latest 100
+closed PRs contain no merge, the browser scans the current repository tree,
+reads up to 80 source/document files, and passes structural and text-pattern
+claims through explicit checks. It reports the exact scan scope and keeps
+unresolved intent `Unknown`. No model, project build, or test suite runs in
+this static GitHub Pages fallback.
 
 The prior [animated slide deck](demo/concept-deck-slides.html) remains available
 as a fallback.
