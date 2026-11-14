@@ -50,6 +50,11 @@ def load_artifacts(root: Path) -> dict:
         "proof": load_json(root / ".trust" / "findings" / "2297-proof.json"),
         "toy": load_json(root / "toy" / "out" / "review.json"),
         "accept": load_json(root / "toy" / "out" / "accept.json"),
+        "pr_reviews": {
+            n: load_json(root / ".trust" / "pr-reviews" / f"pr{n}.json")
+            for n in (1, 2, 3, 4, 5)
+            if (root / ".trust" / "pr-reviews" / f"pr{n}.json").exists()
+        },
     }
 
 
@@ -733,6 +738,50 @@ def s_acceptance(d: dict) -> str:
     </div>"""
 
 
+def s_pr_scoreboard(d: dict) -> str:
+    reviews = d.get("pr_reviews") or {}
+    if not reviews:
+        return ("<h2>Every PR, reviewed</h2><p>run "
+                "<code>python trust/generic/review_prs.py</code> first</p>")
+    label_cls = {"Refuted": "bad", "Proved within scope": "ok",
+                 "Tested": "mid", "Unknown": "dim"}
+    max_tok = max((r["tokens"]["basic_ai"] for r in reviews.values()),
+                  default=1)
+    rows = ""
+    for n in sorted(reviews):
+        r = reviews[n]
+        counts: dict = {}
+        for c in r.get("claims") or []:
+            counts[c["label"]] = counts.get(c["label"], 0) + 1
+        chips = " ".join(
+            f"<span class='chip {label_cls.get(l, 'dim')}'>{counts[l]} {l}</span>"
+            for l in counts)
+        b, p = r["tokens"]["basic_ai"], r["tokens"]["pipeline"]
+        rows += f"""
+        <tr>
+          <td><b>#{r['pr']}</b> <span class="dim">{esc(r['title'][:48])}</span><br>
+              <span class="dim">{esc(r['direction'])}</span></td>
+          <td>{chips}</td>
+          <td class="tok">
+            <div class="tbar"><span class="tfill basic" style="width:{100*b//max_tok}%"></span></div>
+            <span class="dim">basic AI ~{b:,} tok</span>
+            <div class="tbar"><span class="tfill pipe" style="width:{100*p//max_tok}%"></span></div>
+            <span class="dim">pipeline ~{p:,} tok</span>
+          </td>
+        </tr>"""
+    return f"""
+    <h2>Every PR, reviewed - one honest scoreboard</h2>
+    <p>Same checkers, all five PRs. Direction = what the PR meant for the
+    project's path; verdicts use the four labels; tokens compare a basic AI
+    reading the whole diff against this pipeline carrying only its evidence.</p>
+    <table class="score">
+      <tr><th>PR · direction</th><th>checker verdicts</th><th>tokens (estimates)</th></tr>
+      {rows}
+    </table>
+    <p class="dim">full table: <a href="review-all-prs.html" target="_blank">
+    review-all-prs.html</a> · re-run: python trust/generic/review_prs.py</p>"""
+
+
 # ---------------------------------------------------------------------------
 # Part 2: the real PR, proof-carrying
 # ---------------------------------------------------------------------------
@@ -863,6 +912,7 @@ SLIDES = [
     ("Expanding the search space", s_expand),
     ("The digest: issues first", s_digest),
     ("The named acceptance", s_acceptance),
+    ("Every PR, reviewed: scoreboard", s_pr_scoreboard),
     ("The real PR: setup", s_setup),
     ("Before: the wrong review", s_before),
     ("After: the checked base", s_after),
@@ -1003,6 +1053,13 @@ nav button:hover{border-color:#4d8ff0}
 .linetag.mid{background:#4d3d12;color:#ffd98a}
 .linetag.dim{background:#2a2f42;color:#8b94ac}
 .card.good{border-color:#1f5c3c}
+table.score{width:100%;border-collapse:collapse;background:#101a30;border:1px solid #253251;border-radius:10px;overflow:hidden}
+table.score th{font:700 11px Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#7f8db0;text-align:left;padding:8px 12px;border-bottom:1px solid #253251}
+table.score td{padding:8px 12px;border-bottom:1px solid #1a2340;font-size:13px;vertical-align:top}
+.tbar{height:7px;background:#1a2340;border-radius:4px;margin:2px 0;overflow:hidden}
+.tfill{display:block;height:100%}
+.tfill.basic{background:#54608a}
+.tfill.pipe{background:#6d4a9e}
 """
 
 _JS = r"""
