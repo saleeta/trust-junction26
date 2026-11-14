@@ -19,6 +19,8 @@
       "scope_note": "",
       "example": "A shopper with a HALF coupon, 10 items, a member is charged -100. The shop pays them.",
       "stage": 1,
+      "tier": "executed",
+      "chain": [],
       "witnesses": [
         {
           "b": [
@@ -55,6 +57,8 @@
       "scope_note": "",
       "example": "A shopper with a HALF coupon, 10 items, a member is charged -100. The shop pays them.",
       "stage": 1,
+      "tier": "derived",
+      "chain": [],
       "witnesses": [
         {
           "b": [
@@ -91,6 +95,8 @@
       "scope_note": "",
       "example": "",
       "stage": 1,
+      "tier": "executed",
+      "chain": [],
       "witnesses": [],
       "n_witnesses": 0,
       "command": "python toy/review.py --check P1"
@@ -112,6 +118,8 @@
       "scope_note": "",
       "example": "The VIP coupon was worth 60% off (price 40). It now gives 50.",
       "stage": 2,
+      "tier": "executed",
+      "chain": [],
       "witnesses": [
         {
           "c": "VIP"
@@ -137,6 +145,8 @@
       "scope_note": "",
       "example": "The README still tells customers 60% off. The code now delivers 50%.",
       "stage": 2,
+      "tier": "derived",
+      "chain": [],
       "witnesses": [
         {
           "c": "VIP"
@@ -160,6 +170,8 @@
       "scope_note": "Examples only. The tests run just these baskets: [('', 1, False), ('HALF', 1, False)].",
       "example": "",
       "stage": 2,
+      "tier": "executed",
+      "chain": [],
       "witnesses": [],
       "n_witnesses": 0,
       "command": "python toy/review.py --check T1"
@@ -181,6 +193,8 @@
       "scope_note": "",
       "example": "No test uses a HALF coupon, 10 items, a member, so the build stays green.",
       "stage": 2,
+      "tier": "executed",
+      "chain": [],
       "witnesses": [
         {
           "w": [
@@ -215,6 +229,8 @@
       "scope_note": "",
       "example": "",
       "stage": 2,
+      "tier": "human",
+      "chain": [],
       "witnesses": [],
       "n_witnesses": 0,
       "command": "python toy/review.py --check U1"
@@ -236,6 +252,11 @@
       "scope_note": "",
       "example": "Same shopper (a HALF coupon, 10 items, a member): total -100, loyalty points -10.",
       "stage": 3,
+      "tier": "executed",
+      "chain": [
+        "final_price",
+        "checkout"
+      ],
       "witnesses": [
         {
           "w": [
@@ -272,6 +293,12 @@
       "scope_note": "",
       "example": "Same shopper: revenue goes from 1000 to 900 after a sale.",
       "stage": 3,
+      "tier": "executed",
+      "chain": [
+        "final_price",
+        "checkout",
+        "post_sale"
+      ],
       "witnesses": [
         {
           "w": [

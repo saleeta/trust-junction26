@@ -1,14 +1,14 @@
 # Two-minute stage presentation
 
-Open the [belief replay](demo/concept-deck.html) before the timer starts.
-It is a single-canvas, self-contained HTML demo. Click **Play the example**,
-then advance through four simulated PR merges backed by local Git commits.
-Each interaction grows the belief map and updates the verdicts. Arrow keys
-also move between merges. Click any belief to inspect its source and evidence.
+Open the [visual belief replay](demo/concept-deck.html) before the timer starts.
+The checked example is already loaded. Press **Next** four times, or use
+**Play** for an automatic replay. Each step draws one new claim and changes
+the old ones when evidence arrives. Click a belief to change the witness shown
+at the right. Arrow keys also move between merges.
 
 | Time | Stage action and line |
 |---|---|
-| 0–15 s | Load the example. “Each merge gives the project new beliefs. We keep the source of each one.” |
+| 0–15 s | Show the empty ledger and press **Next**. “Each merge gives the project a belief. We keep its source.” |
 | 15–35 s | Advance PR #1 and #2. “A price must stay nonnegative; a VIP coupon promises 60% off. The graph grows with each promise.” |
 | 35–65 s | Advance PR #3; click the red belief and amber warning. “A checked basket is charged −100: that breaches the old price rule. Whether unrestricted discount stacking is intended remains a human question.” |
 | 65–100 s | Advance PR #4. “The AI caps each discount at 50%, yet the negative price survives, and VIP now gets only 50%. Green tests do not cover those cases.” |

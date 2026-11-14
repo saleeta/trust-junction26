@@ -252,6 +252,8 @@ def run_all() -> dict:
             id=c["id"], short=c["short"], rule=c["rule"], claim=c["claim"], origin=c["origin"], plain=c["plain"],
             formula=v.formula, label=v.label, checked=v.checked, assumptions=v.assumptions, note=v.note,
             scope_note=c.get("scope_note", ""), example=example(c), stage=c["stage"],
+            tier={"R-DOC": "derived", "R-HUMAN": "human"}.get(c["rule"], "executed"),
+            chain=[n for n, h in [("final_price", 0)] + chain if h <= c.get("hops", -1)] if c["rule"] == "R-CALL" else [],
             witnesses=[{k: (list(x) if isinstance(x, tuple) else x) for k, x in w.items()} for w in v.witnesses][:8],
             n_witnesses=len(v.witnesses), command=f"python toy/review.py --check {c['id']}"))
     return dict(pr3=pr3[:8], pr4=pr4[:8], claims=claims, files=files, nodes=nodes, edges=edges, rules=RULES,
@@ -278,7 +280,7 @@ def main():
     out = HERE / "out"
     out.mkdir(exist_ok=True)
     (out / "review.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
-    html = (HERE / "viewer.html").read_text(encoding="utf-8").replace("__DATA__", json.dumps(data))
+    html = (HERE.parent / "trust" / "generic" / "viewer.html").read_text(encoding="utf-8").replace("__DATA__", json.dumps(data))
     (out / "review.html").write_text(html, encoding="utf-8")
     for c in data["claims"]:
         print(f"{c['id']}  {c['label']:<20} {c['short']}")

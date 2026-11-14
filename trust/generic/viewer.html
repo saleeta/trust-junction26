@@ -50,6 +50,7 @@ It reads sensibly and <b>every test is green</b>. Step through to see how the re
 </div>
 <script>
 const D=__DATA__;
+if(D.title)document.title=D.title;if(D.story)document.querySelector('header').innerHTML=D.story;
 const L=l=>l.startsWith("Proved")?"Proved":l;
 const COL={Refuted:"#ef4444",Proved:"#22c55e",Tested:"#0ea5e9",Unknown:"#94a3b8"};
 const claims=Object.fromEntries(D.claims.map(c=>[c.id,c]));
@@ -80,13 +81,13 @@ N.forEach(n=>{const g=el("g",{class:"node"},ng),x=X[n.col],y=n.y+14;let s;
  const sty={pr:["#2c3550","#64748b"],cur:["#4b2a74","#a855f7"],code:["#0f3f3b","#14b8a6"],claim:["#3a2c10","#f59e0b"]}[n.kind];
  if(sty){s.setAttribute("fill",sty[0]);s.setAttribute("stroke",sty[1]);s.setAttribute("stroke-width",n.kind=="cur"?2.5:1.5)}
  g.onclick=()=>pick(n.id);NE[n.id]={g,s,n}});
-const CAP=[
+const CAP0=[
  ["1. Just the diff","<b>What a normal reviewer sees:</b> PR #4 changes one function and one README line. The tests pass. <span class=q>Question: is the price really never negative now?</span> With only the diff there is nothing to say: <b>0 findings</b>."],
  ["2. Claims in the diff","The changed lines <b>make claims</b> (amber): <i>“price never negative”</i> (A1), the README repeats it (A2), and ordinary shoppers are untouched (P1). They are <b>not checked yet</b>, so they stay unlabeled."],
  ["3. Look back at old PRs","<b>The history is evidence.</b> PR #2 promised <i>“VIP coupon: 60% off”</i>; PR #3 added more discounts that stack; PR #3's tests run only two baskets. The graph pulls these in (<span style='color:#7b8fe0'>dashed</span>) and writes <b>new claims</b> the diff never mentioned: does the cap break an old promise (B1)? would the tests notice (T2)? is stacking even intended (U1)?"],
  ["4. Look deeper: who calls it?","The code is <b>parsed</b> to find every function that calls <code>final_price</code>: <b>checkout()</b> directly, and <b>post_sale()</b> through it. If <code>final_price</code> can be wrong, so can they. Each is <b>re-checked on the same bad basket</b> (<span style='color:#e879f9'>pink</span> edges) — two more problems, found without anyone suspecting them."],
  ["5. Run the checkers","Every claim is a formula, <b>executed</b> against the code. Colors are verdicts, not opinions. One falsified assumption became <b>a family of findings</b> across the diff, history, and callers."]];
-let stage=0;const steps=document.getElementById("steps");
+const CAP=D.captions||CAP0;let stage=0;const steps=document.getElementById("steps");
 CAP.forEach((c,i)=>{const b=document.createElement("button");b.textContent=c[0];b.onclick=()=>setStage(i);steps.appendChild(b)});
 function setStage(s){stage=s;[...steps.children].forEach((b,i)=>b.classList.toggle("on",i==s));
  document.getElementById("cap").innerHTML=CAP[s][1];let sites=0,cl=0,ref=0,prf=0;
@@ -113,30 +114,32 @@ for(const f in D.files){const h=document.createElement("div");h.className="k";h.
 const panel=document.getElementById("panel");
 const badge=c=>`<span class="badge b-${L(c.label)}">${c.label.toUpperCase()}</span>`;
 const wit=w=>Object.values(w).map(v=>Array.isArray(v)?v.map(x=>x===""?"no coupon":x===true?"member":x===false?"non-member":x).join(", "):v).join(" | ");
-function chainHtml(c){if(c.rule!="R-CALL")return"";const ch=D.chain.map(([n],i)=>`<span class="f ${i<=(c.id=="D1"?1:2)?"bad":""}">${n}()</span>`);
+function chainHtml(c){if(!c.chain||!c.chain.length)return"";return `<div class="k">How the problem travels</div><div class="chain">${c.chain.map(n=>`<span class="f bad">${n}()</span>`).join(" ← ")}</div><div class="small">The first function is where the doubt starts; every function after it calls the one before it, so it inherits the doubt.</div>`}
  return `<div class="k">How the problem travels</div><div class="chain">${ch.join(" ← ")}</div><div class="small">final_price is refuted (A1), so every function above it that calls it inherits the doubt.</div>`}
 function proof(c){const linked=[];for(const f in D.files)D.files[f].forEach(l=>{if(l.claims.includes(c.id))linked.push(`${f.split("/").pop()}:${l.n}`)});
  let h=`<h3>${c.id} · ${c.short} ${badge(c)}</h3><div class="say"><b>In plain words:</b> ${c.plain}</div>`;
  if(c.example)h+=`<div class="ex"><b>Concrete example:</b> ${c.example}</div>`;
  h+=chainHtml(c)+`<div class="k">Claim</div><div>${c.claim}</div><div class="k">As logic</div><pre>${c.formula}</pre>
- <div class="k">Rule used</div><div><b>${c.rule}</b> — ${D.rules[c.rule]}</div>`;
+ <div class="k">Rule used</div><div><b>${c.rule}</b> — ${D.rules[c.rule]}</div>${c.tier?`<div class="k">Kind of evidence</div><div>${TIER[c.tier]}</div>`:""}`;
  if(c.note)h+=`<div class="k">Derivation</div><div>${c.note}</div>`;
  if(c.label=="Refuted")h+=`<div class="k">Counterexamples (${c.n_witnesses})</div><pre>${c.witnesses.slice(0,6).map(wit).join("\n")||"(derived — see above)"}</pre>`;
  if(L(c.label)=="Proved")h+=`<div class="k">Proved only under</div><pre>${c.assumptions.join("\n")}\n${c.checked} cases checked</pre><div class="small">Says nothing about other prices or inputs.</div>`;
  if(c.label=="Tested")h+=`<div class="k">What this does NOT show</div><div>${c.scope_note}</div>`;
  if(c.label=="Unknown")h+=`<div class="k">Why unknown</div><div>${c.note}</div>`;
  h+=`<div class="k">Came from</div><div>${c.origin}</div><div class="k">Patch lines linked to this proof</div><div>${linked.join(", ")||"none — it is about code outside the diff"}</div>
- <div class="k">Re-run it</div><pre>${c.command}   # commit ${D.pr4}</pre>`;return h}
-const PEND=`<div class="pend"><b>Human decision: PENDING.</b> The AI recommends <i>request changes</i>. It cannot approve this PR or decide whether stacking discounts is intended.</div>`;
+ <div class="k">Re-run it</div><pre>${c.command}   # commit ${D.head||D.pr4}</pre>`;return h}
+const TIER={executed:'Executed — code was run and its output decided this.',static:'Static — read from the code text. No program was run, so this can miss dynamic behaviour.',induced:'Induced — a pattern seen in past commits. A deviation is a lead for a human, never proof of a defect.',derived:'Derived — inherits the verdict of the claim it restates.',human:'Needs a person — code cannot decide questions of intent.'};
+const PEND=`<div class="pend"><b>Human decision: PENDING.</b> ${D.pend||'The AI recommends <i>request changes</i>. It cannot approve this PR or decide whether stacking discounts is intended.'}</div>`;
 function showLine(f,l){const cs=l.claims.map(i=>claims[i]);
  panel.innerHTML=`<div class="small">${f}:${l.n}</div><pre>${l.text}</pre><div class="small">This line takes part in ${cs.length} claim(s). Proofs are shared, not copied.</div>`+cs.map(c=>`<hr style="border:0;border-top:1px solid var(--line);margin:12px 0">`+proof(c)).join("")+PEND;hi(l.claims)}
 function hi(ids){for(const id in NE)NE[id].g.classList.toggle("hl",ids.includes(id)||ids.includes(NE[id].n.sub))}
-const INFO={PR4:"The AI patch under review: one function and one README line. Tests green.",fp:"final_price(): PR #1 wrote it, PR #4 changed it to cap each discount at 50%.",
+const INFO0={PR4:"The AI patch under review: one function and one README line. Tests green.",fp:"final_price(): PR #1 wrote it, PR #4 changed it to cap each discount at 50%.",
  rd4:"PR #4 added the sentence “Prices can never go negative.”",cp:"PR #2: coupons WELCOME 10%, HALF 50%, VIP 60%.",rd2:"PR #2 promised customers “VIP coupon: 60% off.”",
  bm:"PR #3 added bulk (40% for 10+ items) and member (20%) discounts. They <b>add up</b> with the coupon — this is the real source of the overshoot.",
  ts:"PR #3's tests only run two baskets: HALF×1 and no-coupon×1. Neither can go negative, so the build stays green.",
  co:"checkout() turns discounts into a total and awards loyalty points. Found by parsing: it calls final_price.",lg:"post_sale() adds a sale to revenue. Found by parsing: it calls checkout(), which calls final_price — two hops away.",
  PR1:"PR #1 introduced final_price and rule R-1.",PR2:"PR #2 introduced coupons.",PR3:"PR #3 introduced bulk/member discounts, checkout(), the ledger, and the tests."};
+const INFO={...INFO0,...(D.info||{})};
 function pick(id){const o=NE[id],n=o.n;
  if(n.kind=="claim"||n.kind=="ver"){const c=claims[n.kind=="ver"?n.sub:id];
   panel.innerHTML=(stage>=4?proof(c):`<h3>${c.id} · ${c.short} <span class="badge b-Unknown">UNCHECKED</span></h3><div class="say"><b>In plain words:</b> ${c.plain}</div><div class="k">Claim</div><div>${c.claim}</div><div class="k">Came from</div><div>${c.origin}</div><div class="small" style="margin-top:8px">Go to step 5 to see its verdict.</div>`)+PEND;hi([c.id]);return}

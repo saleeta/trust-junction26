@@ -1,0 +1,485 @@
+{
+  "title": "Review \u2014 jsrepo",
+  "story": "<h1>Proof-carrying review \u2014 jsrepo</h1><p><b>ignore free items</b><br>2 files analysed (.md\u00d71, .js\u00d71). Nothing from the repository was executed except its own test command. Step through to see how the review grows from the diff to its history and to the code that mentions it.</p>",
+  "captions": [
+    [
+      "1. Just the diff",
+      "<b>What a reviewer sees:</b> 2 changed files. <span class=q>Question: what does this change quietly rely on?</span> With the diff alone there is nothing to label: <b>0 findings</b>."
+    ],
+    [
+      "2. Claims in the diff",
+      "The change <b>makes claims</b> (amber): that its symbols are tested, and any absolute sentence it adds to the docs. Not checked yet, so unlabeled."
+    ],
+    [
+      "3. Look back at history",
+      "<b>History is evidence.</b> 1 earlier commits touched these files, and 0 file(s) habitually change with them. The graph pulls them in (<span style='color:#7b8fe0'>dashed</span>). Habits are <b>induced</b>, so they stay Unknown: leads, not proof."
+    ],
+    [
+      "4. Look deeper: who mentions it?",
+      "A text search finds <b>1</b> place(s) that mention the changed code and <b>0</b> that mention <i>those</i> (<span style='color:#e879f9'>pink</span>). These are listed to look at, not assumed broken."
+    ],
+    [
+      "5. Labels",
+      "Each claim ends <b>Refuted</b> (counterexample in the text or a failing run), <b>Tested</b>, <b>Proved within scope</b>, or <b>Unknown</b>. Here: <b>1</b> refuted. The human decision stays <b>pending</b>."
+    ]
+  ],
+  "head": "285dad53",
+  "base": "74cd84c3",
+  "pr3": "74cd84c3",
+  "pr4": "285dad53",
+  "pend": "The AI lists evidence and leads. It cannot approve this change, and most of what it lists is Unknown by design.",
+  "claims": [
+    {
+      "id": "G1",
+      "short": "tests mention what changed",
+      "rule": "R-STATIC",
+      "tier": "static",
+      "stage": 1,
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "origin": "derived from the diff and a text search of the repository",
+      "plain": "Does anything in the test suite even mention the code this change touches?",
+      "example": "",
+      "formula": "\u2200 s \u2208 CHANGED_SYMBOLS. a test file mentions s",
+      "label": "Proved within scope",
+      "witnesses": [],
+      "assumptions": [
+        "symbols are extracted by pattern (not a parser); 'mentions' means a whole-word text match in a test file"
+      ],
+      "checked": 1,
+      "note": "",
+      "chain": [],
+      "scope_note": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check G1"
+    },
+    {
+      "id": "H1",
+      "short": "doc: Totals are always positive a\u2026",
+      "rule": "R-DOC",
+      "tier": "static",
+      "stage": 1,
+      "claim": "README.md:3 says: \"Totals are always positive and never include refunds.\"",
+      "origin": "sentence added in README.md",
+      "plain": "A sentence with an absolute word (never/always/only/\u2026) was added. No test reads documentation.",
+      "formula": "doc_claim \u21d2 code_behaviour",
+      "label": "Unknown",
+      "note": "no automatic checker can verify a prose claim; a person (or a --spec command) must.",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check H1"
+    },
+    {
+      "id": "K1",
+      "short": "receipt() still correct",
+      "rule": "R-CALL",
+      "tier": "static",
+      "stage": 3,
+      "claim": "receipt() in src/receipt.js keeps behaving correctly after total() changed.",
+      "origin": "receipt() mentions `total` at src/receipt.js:3 (text match, 1 hop from the change)",
+      "plain": "receipt() uses code this change touches. It is a place to look, not a proven problem.",
+      "formula": "behaviour(receipt) preserved",
+      "label": "Unknown",
+      "chain": [
+        "total",
+        "receipt"
+      ],
+      "note": "no checker available: listed because it mentions the changed code. Add a --spec command to test it.",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "example": "",
+      "scope_note": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check K1"
+    },
+    {
+      "id": "T1",
+      "short": "project tests pass",
+      "rule": "R-RUN",
+      "tier": "executed",
+      "stage": 2,
+      "claim": "The project's own tests pass on the changed code.",
+      "origin": "`C:\\Program Files\\nodejs\\npm.CMD test --silent` at 285dad53",
+      "plain": "Run the repository's own tests.",
+      "formula": "tests(head) pass",
+      "label": "Tested",
+      "note": "",
+      "witnesses": [],
+      "scope_note": "A pass means these tests passed once, on this machine. Other inputs may still fail.",
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check T1"
+    },
+    {
+      "id": "S1",
+      "short": "A refund line (negative price) is ",
+      "rule": "R-RUN",
+      "tier": "executed",
+      "stage": 2,
+      "claim": "A refund line (negative price) is still summed into the total",
+      "origin": "your spec: `node -e \"const {total}=require('./src/cart');process.exit(total([{price:-5,qty:1},{price:10,qty:1}])===5?0:1)\"`",
+      "plain": "A refund line (negative price) is still summed into the total",
+      "formula": "exit(node -e \"const {total}=require('./src/cart');process.exit(total([{price:-5,qty:1},{price:10,qty:1}])===5?0:1)\") = 0",
+      "label": "Refuted",
+      "witnesses": [
+        {
+          "exit": 1,
+          "output_tail": ""
+        }
+      ],
+      "scope_note": "The command passed on this checkout once; other inputs may still fail.",
+      "assumptions": [],
+      "note": "",
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check S1"
+    },
+    {
+      "id": "U1",
+      "short": "the change is what was intended",
+      "rule": "R-HUMAN",
+      "tier": "human",
+      "stage": 2,
+      "claim": "This change does what its author and the requirement intended.",
+      "origin": "PR title: \"ignore free items\"",
+      "plain": "Whether the change matches the intent behind it is a human judgement.",
+      "formula": "intended(change)",
+      "label": "Unknown",
+      "note": "a question of intent; code cannot decide it.",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "command": "python trust/generic/analyze.py C:/Users/saleeta/AppData/Local/Temp/claude/945e3598028188c3/252d0357-f564-464b-ab5f-cb2aba1462c5/scratchpad/jsrepo --base HEAD~1 --head HEAD --check U1"
+    }
+  ],
+  "files": {
+    "src/cart.js": [
+      {
+        "n": 1,
+        "text": "function total(items) {",
+        "changed": false,
+        "claims": []
+      },
+      {
+        "n": 2,
+        "text": "  // skip free items",
+        "changed": true,
+        "claims": [
+          "G1",
+          "K1"
+        ]
+      },
+      {
+        "n": 3,
+        "text": "  return items.filter(i => i.price > 0).reduce((a, i) => a + i.price * i.qty, 0);",
+        "changed": true,
+        "claims": [
+          "G1",
+          "K1"
+        ]
+      },
+      {
+        "n": 4,
+        "text": "}",
+        "changed": false,
+        "claims": []
+      }
+    ],
+    "README.md": [
+      {
+        "n": 2,
+        "text": "Sums item prices.",
+        "changed": false,
+        "claims": []
+      },
+      {
+        "n": 3,
+        "text": "Totals are always positive and never include refunds.",
+        "changed": true,
+        "claims": [
+          "H1"
+        ]
+      }
+    ]
+  },
+  "nodes": [
+    [
+      "HEAD",
+      "285dad53",
+      "ignore free items",
+      "cur",
+      0,
+      0
+    ],
+    [
+      "f:src/cart.js",
+      "src/cart.js",
+      "total",
+      "code",
+      1,
+      0
+    ],
+    [
+      "f:README.md",
+      "README.md",
+      "changed",
+      "code",
+      1,
+      0
+    ],
+    [
+      "c:a2737c21",
+      "a2737c21",
+      "initial cart",
+      "pr",
+      0,
+      2
+    ],
+    [
+      "t:test/cart.test.js",
+      "test/cart.test.js",
+      "mentions changed code",
+      "code",
+      1,
+      2
+    ],
+    [
+      "k:src/receipt.js:receipt",
+      "receipt()",
+      "src/receipt.js",
+      "code",
+      1,
+      3
+    ],
+    [
+      "G1",
+      "G1 tests mention what changed",
+      "",
+      "claim",
+      2,
+      1
+    ],
+    [
+      "H1",
+      "H1 doc: Totals are always positive a\u2026",
+      "",
+      "claim",
+      2,
+      1
+    ],
+    [
+      "K1",
+      "K1 receipt() still correct",
+      "",
+      "claim",
+      2,
+      3
+    ],
+    [
+      "T1",
+      "T1 project tests pass",
+      "",
+      "claim",
+      2,
+      2
+    ],
+    [
+      "S1",
+      "S1 A refund line (negative price) is ",
+      "",
+      "claim",
+      2,
+      2
+    ],
+    [
+      "U1",
+      "U1 the change is what was intended",
+      "",
+      "claim",
+      2,
+      2
+    ],
+    [
+      "VG1",
+      "Proved within scope",
+      "G1",
+      "ver",
+      3,
+      4
+    ],
+    [
+      "VH1",
+      "Unknown",
+      "H1",
+      "ver",
+      3,
+      4
+    ],
+    [
+      "VK1",
+      "Unknown",
+      "K1",
+      "ver",
+      3,
+      4
+    ],
+    [
+      "VT1",
+      "Tested",
+      "T1",
+      "ver",
+      3,
+      4
+    ],
+    [
+      "VS1",
+      "Refuted",
+      "S1",
+      "ver",
+      3,
+      4
+    ],
+    [
+      "VU1",
+      "Unknown",
+      "U1",
+      "ver",
+      3,
+      4
+    ]
+  ],
+  "edges": [
+    [
+      "HEAD",
+      "f:src/cart.js",
+      "touch",
+      0
+    ],
+    [
+      "HEAD",
+      "f:README.md",
+      "touch",
+      0
+    ],
+    [
+      "c:a2737c21",
+      "f:README.md",
+      "hist",
+      2
+    ],
+    [
+      "c:a2737c21",
+      "f:src/cart.js",
+      "hist",
+      2
+    ],
+    [
+      "G1",
+      "VG1",
+      "verdict",
+      4
+    ],
+    [
+      "H1",
+      "VH1",
+      "verdict",
+      4
+    ],
+    [
+      "K1",
+      "VK1",
+      "verdict",
+      4
+    ],
+    [
+      "T1",
+      "VT1",
+      "verdict",
+      4
+    ],
+    [
+      "S1",
+      "VS1",
+      "verdict",
+      4
+    ],
+    [
+      "U1",
+      "VU1",
+      "verdict",
+      4
+    ],
+    [
+      "f:src/cart.js",
+      "G1",
+      "claim",
+      1
+    ],
+    [
+      "f:README.md",
+      "G1",
+      "claim",
+      1
+    ],
+    [
+      "f:README.md",
+      "H1",
+      "claim",
+      1
+    ],
+    [
+      "t:test/cart.test.js",
+      "G1",
+      "claim",
+      2
+    ],
+    [
+      "f:src/cart.js",
+      "k:src/receipt.js:receipt",
+      "calls",
+      3
+    ],
+    [
+      "k:src/receipt.js:receipt",
+      "K1",
+      "claim",
+      3
+    ]
+  ],
+  "rules": {
+    "R-RUN": "A claim is only Tested or Refuted because something was executed.",
+    "R-STATIC": "A claim about the code text can be refuted by a counterexample found in the text, under listed assumptions.",
+    "R-HIST": "Earlier changes to the same files are evidence about what this change should also touch.",
+    "R-CALL": "If a function changes, every function that mentions it is a place to look; they are listed, not assumed broken.",
+    "R-DOC": "A sentence in the docs makes a claim that no test reads.",
+    "R-HUMAN": "Questions of intent cannot be decided by code. They go to a person."
+  },
+  "info": {},
+  "base_note": "",
+  "run": {
+    "ran": true,
+    "cmd": "C:\\Program Files\\nodejs\\npm.CMD test --silent",
+    "rc": 0
+  },
+  "languages": {
+    ".md": 1,
+    ".js": 1
+  },
+  "too_common": [],
+  "capabilities": {
+    "static": true,
+    "induced": true,
+    "executed": true
+  },
+  "log": [
+    "a2737c21|initial cart"
+  ]
+}
