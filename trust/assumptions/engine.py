@@ -180,7 +180,7 @@ class TfmGuardAssumption:
 
         probes = tg.compile_probe(g.guarded_api, excluded, ctx.probe_dir)
         self._probes[a.id] = probes
-        ok = [p.tfm for p in probes if p.compiles]
+        ok = [p.tfm for p in probes if p.compiles is True]
 
         if g.preexisting:
             a.evidence.append(f"'#if {g.condition}' already existed at "
@@ -194,10 +194,13 @@ class TfmGuardAssumption:
             a.evidence.append(f"{g.guarded_api} compiles unguarded on "
                               f"{', '.join(ok)} - the premise is false")
             a.check_cmd = probes[0].command
-        else:
+        elif probes and all(p.compiles is False for p in probes):
             a.verdict = "SUPPORTED"
             a.evidence.append(f"{g.guarded_api} does not compile on {excluded} "
                               "- the guard is warranted")
+        else:
+            a.verdict = "UNCHECKABLE"
+            a.evidence.append("compile probe could not establish API availability")
 
         if ctx.issue_text and not _mentions_tfms(ctx.issue_text):
             a.evidence.append("the originating issue does not mention target "
@@ -501,7 +504,7 @@ class DocumentedClaimAssumption:
                               "about; reported rather than dropped")
             return
         probes = tg.compile_probe(api, tfms, ctx.probe_dir)
-        ok = [p.tfm for p in probes if p.compiles]
+        ok = [p.tfm for p in probes if p.compiles is True]
         a.evidence.append(f'the sentence was ADDED to {path} by this change')
         if ok:
             a.verdict = "FALSIFIED"
@@ -511,9 +514,12 @@ class DocumentedClaimAssumption:
             a.evidence.append("no test reads documentation, so this claim "
                               "cannot be caught by the suite")
             a.check_cmd = probes[0].command
-        else:
+        elif probes and all(p.compiles is False for p in probes):
             a.verdict = "SUPPORTED"
             a.evidence.append(f"{api} genuinely does not compile on {tfms}")
+        else:
+            a.verdict = "UNCHECKABLE"
+            a.evidence.append("compile probe could not establish API availability")
 
     def footprint(self, a: Assumption, ctx: Context) -> list[ImpactSite]:
         if a.verdict != "FALSIFIED":

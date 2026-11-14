@@ -8,9 +8,8 @@
 //
 // VERDICT: FALSIFIED   SEVERITY: moderate
 //
-// This test reads the repository's own template sources. It needs no network
-// and does not build MessagePack: it asserts a property of the shipped
-// templates directly.
+// This test reads a snapshot of the requested git commit. It needs no network
+// and does not build MessagePack: it asserts a property of the templates.
 using System;
 using System.IO;
 using System.Linq;
@@ -20,8 +19,8 @@ namespace TrustRepro;
 
 public class ExcludeFromCodeCoverageAppliesToAllShippedTargets
 {
-    // Resolved at build time by make_repro.py
-    const string RepoRoot = @"D:\\work\\big-hackathon\\repo";
+    // Immutable branch snapshot materialized by make_repro.py
+    const string RepoRoot = @"D:\work\big-hackathon\.trust\repro\2297\source_snapshot\a0aa5ab2de7f5a669d97e37184a89034c1de82b6";
     const string TemplateDir = @"src/MessagePack.SourceGenerator/Transforms";
 
     // Issue #2297 asked for "all generated code" to carry the attribute,

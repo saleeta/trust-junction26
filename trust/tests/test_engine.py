@@ -62,6 +62,18 @@ def test_check_supports_when_probe_fails(guard_repo, monkeypatch, tmp_path):
     assert a.verdict == "SUPPORTED"
 
 
+def test_check_is_inconclusive_when_probe_cannot_run(guard_repo, monkeypatch,
+                                                      tmp_path):
+    monkeypatch.setattr(tg, "compile_probe", lambda api, tfms, wd: [
+        tg.Probe(t, api, None, "dotnet unavailable", "SDK unavailable")
+        for t in tfms])
+    c = ctx_for(guard_repo, probe_dir=tmp_path)
+    cls = en.TfmGuardAssumption()
+    a = cls.harvest(c)[0]
+    cls.check(a, c)
+    assert a.verdict == "UNCHECKABLE"
+
+
 def test_no_footprint_or_hypotheses_when_not_falsified(guard_repo, monkeypatch,
                                                        tmp_path):
     monkeypatch.setattr(tg, "compile_probe", stub_probes(False))

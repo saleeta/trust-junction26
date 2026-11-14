@@ -1,9 +1,9 @@
 """
-run_ab - the measured before/after (DESIGN.md section 5.2).
+run_ab - an exploratory naive-baseline vs checked-pipeline comparison.
 
-Two review arms over the same branch. The ONLY difference is whether the
-author agent's context capsule is available. Same checks, same engine, same
-repo access.
+The arms deliberately differ in base resolution and available checks. This
+illustrates a failure mode; it does not measure the causal value of an author
+capsule. Tieto did not provide author sessions for these branches.
 
   Arm A  "before"  diff + issue text + unrestricted repo reads.
                    This is a genuine PR review as practised today. It is
@@ -252,13 +252,15 @@ def capsule_driven_checks(repo: Path, ledger: Ledger, base: str, branch: str,
         g = f.guards[0]
         findings.append(Finding(
             id=f"assumption-{f.id}",
-            title=f"falsified assumption: {g.guarded_api} guarded by #if {g.condition}",
-            claim=f.assumption + " - FALSE",
+            title=f"compatibility premise falsified: {g.guarded_api} guarded by #if {g.condition}",
+            claim=(f"{g.guarded_api} compiles on at least one excluded target; "
+                   "whether narrowing the requirement is acceptable is a "
+                   "human decision"),
             severity=f.severity,
             evidence=f.evidence,
             verify=f.verify[0] if f.verify else "",
             test_invisible=not f.test_observable,
-            from_capsule=True,
+            from_capsule=False,  # derived from committed code, not author context
         ))
     return findings
 
@@ -295,9 +297,13 @@ def verify(findings: list[Finding], repo: Path, true_base: str,
                     f"branch's real parent) and {branch}. The claim is an "
                     "artefact of a misresolved base - a false finding.")
         elif f.id.startswith("assumption-"):
-            # already executed: the compile probe is the verification
-            f.status = "CONFIRMED"
-            f.verify_note = "compile probe executed; premise falsified"
+            # The checker supplied the probe result. This is corroboration,
+            # not an independent second verifier or a test of emitted output.
+            f.status = "CONFIRMED" if f.evidence and f.verify else "UNVERIFIED"
+            f.verify_note = ("compile probe confirmed API availability; "
+                             "requirement impact still needs human assessment"
+                             if f.status == "CONFIRMED" else
+                             "probe evidence missing; finding remains unverified")
         elif f.id == "review-noise-ratio":
             n = len([l for l in git("diff", "--name-only",
                                     f"{true_base}..{branch}").splitlines() if l.strip()])
@@ -326,7 +332,7 @@ def verify(findings: list[Finding], repo: Path, true_base: str,
 
 def run_arm_a(repo: Path, branch: str, issue_text: str) -> ArmResult:
     ledger = Ledger(repo)
-    r = ArmResult(arm="A (no capsule)", has_capsule=False)
+    r = ArmResult(arm="A (naive baseline)", has_capsule=False)
     base, method = naive_base(ledger, branch)
     r.base_used, r.base_method = base, method
     if base:
@@ -340,7 +346,7 @@ def run_arm_a(repo: Path, branch: str, issue_text: str) -> ArmResult:
 def run_arm_b(repo: Path, branch: str, issue_text: str, expect_files: int | None,
               probe_dir: Path) -> ArmResult:
     ledger = Ledger(repo)
-    r = ArmResult(arm="B (capsule)", has_capsule=True)
+    r = ArmResult(arm="B (checked pipeline)", has_capsule=False)
 
     rec = capsule_base(repo, branch, expect_files)
     ledger.read("base assumption record", json.dumps(rec.as_assumption()))
@@ -374,6 +380,7 @@ def report(a: ArmResult, b: ArmResult, branch: str, true_base: str) -> None:
     print(f"  A/B REVIEW  {branch}")
     print(f"  true base (branch's first parent): {true_base[:9]}")
     print("=" * 74)
+    print("  EXPLORATORY: the arms use different checks; this is not a capsule A/B test.")
 
     for r in (a, b):
         print(f"\n--- Arm {r.arm}")
@@ -422,10 +429,9 @@ def report(a: ArmResult, b: ArmResult, branch: str, true_base: str) -> None:
     if b.bytes_read > a.bytes_read:
         print(f"\n  NOTE  Arm B loaded {b.bytes_read - a.bytes_read} more bytes "
               f"({b.bytes_read / max(a.bytes_read, 1):.2f}x).")
-        print("        The capsule ADDS evidence here, it does not replace any. "
-              "The\n        'more context, fewer tokens' claim in DESIGN.md "
-              "section 5.2 does not\n        hold for these deterministic arms "
-              "and should not be presented.")
+        print("        The checked pipeline adds probe evidence; it does not "
+              "replace prior reading.\n        This result cannot measure "
+              "author-context value or model token cost.")
     print()
 
 

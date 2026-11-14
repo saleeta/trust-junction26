@@ -27,8 +27,8 @@
   },
   {
     "strategy": "recall",
-    "prompt_tokens": 2529,
-    "evidence_tokens": 2045,
+    "prompt_tokens": 2511,
+    "evidence_tokens": 2027,
     "hits": 16,
     "dropped": 27,
     "citations": true,

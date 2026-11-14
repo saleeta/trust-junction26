@@ -1,0 +1,56 @@
+{
+  "requirement_id": "MessagePack-CSharp#2297",
+  "requirement": "Decorate all generated code with ExcludeFromCodeCoverage.",
+  "branch": "origin/ju26-issue-2297",
+  "commit": "a0aa5ab2de7f5a669d97e37184a89034c1de82b6",
+  "base": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
+  "source_type": "Tieto AI-made patch; author session unavailable",
+  "risk": "moderate",
+  "finding": "The new guard omits the attribute on two shipped target frameworks.",
+  "affected_frameworks": [
+    "net472",
+    "netstandard2.0"
+  ],
+  "evidence": [
+    {
+      "claim": "The requirement says all generated code.",
+      "source": "Issue #2297",
+      "check": "Read .trust/issues/2297.md"
+    },
+    {
+      "claim": "The patch adds #if !NETSTANDARD2_0 && !NETFRAMEWORK.",
+      "source": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+      "check": "git -C repo diff 32258fdbee4bcd653c79f51b4376b5103c6f4d27..a0aa5ab2de7f5a669d97e37184a89034c1de82b6 -- src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs"
+    },
+    {
+      "claim": "The attribute compiles unguarded on both excluded targets.",
+      "source": "Executed compile probes",
+      "check": "python trust/assumptions/tfm_guard_check.py --repo repo --branch origin/ju26-issue-2297 --base 32258fdbee4bcd653c79f51b4376b5103c6f4d27 --issue-text .trust/issues/2297.md"
+    }
+  ],
+  "not_checked": [
+    "The full emitted output was not built for every consumer configuration.",
+    "No original Tieto author transcript was supplied.",
+    "A security review of the entire 237-file patch was not performed."
+  ],
+  "ai_recommendation": "Request changes",
+  "ai_refusal": "AI cannot waive the 'all generated code' requirement or approve this patch.",
+  "human_owner": null,
+  "human_decision": "pending",
+  "accepted_residual_risk": null,
+  "next_action": "A named engineer checks the evidence and requests a fix or records an authorized scope change.",
+  "decision_log": [
+    {
+      "observation": "Base candidates disagreed",
+      "decision": "Used the branch parent; matched the brief's 237-file count."
+    },
+    {
+      "observation": "Guard excludes shipped targets",
+      "decision": "Compiled the attribute unguarded on both targets."
+    },
+    {
+      "observation": "Requirement and implementation differ",
+      "decision": "AI recommends changes; human decision remains pending."
+    }
+  ]
+}

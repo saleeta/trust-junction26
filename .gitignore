@@ -14,3 +14,6 @@ session_graph.json
 # scratch worktrees for instrumented re-implementation experiments
 .trust/re-worktrees/
 /re2283/
+# local Entire CLI installation and generated pinned repro inputs
+/.tools/
+.trust/repro/*/source_snapshot/

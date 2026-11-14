@@ -202,5 +202,12 @@ def test_probe_projects_persist_for_human_verification(tmp_path):
 def test_probe_reports_cleanly_without_sdk(monkeypatch, tmp_path):
     monkeypatch.setattr(tg, "dotnet_exe", lambda: None)
     probes = tg.compile_probe("Some.Attr", ["netstandard2.0"], tmp_path)
-    assert probes[0].compiles is False
+    assert probes[0].compiles is None
     assert "unavailable" in probes[0].output_tail
+
+
+def test_missing_sdk_cannot_support_guard(guard_repo, monkeypatch, tmp_path):
+    monkeypatch.setattr(tg, "dotnet_exe", lambda: None)
+    finding = tg.analyse(guard_repo["path"], guard_repo["base"],
+                         guard_repo["branch"], None, tmp_path)[0]
+    assert finding.verdict == "UNCHECKABLE"

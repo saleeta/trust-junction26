@@ -2,7 +2,7 @@
   "branch": "origin/ju26-issue-2297",
   "true_base": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
   "arm_a": {
-    "arm": "A (no capsule)",
+    "arm": "A (naive baseline)",
     "has_capsule": false,
     "findings": [
       {
@@ -47,8 +47,8 @@
     "git_calls": 4
   },
   "arm_b": {
-    "arm": "B (capsule)",
-    "has_capsule": true,
+    "arm": "B (checked pipeline)",
+    "has_capsule": false,
     "findings": [
       {
         "id": "review-noise-ratio",
@@ -68,8 +68,8 @@
       },
       {
         "id": "assumption-tfm-guard-0",
-        "title": "falsified assumption: System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage guarded by #if !NETSTANDARD2_0 && !NETFRAMEWORK",
-        "claim": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage is unavailable on net472, netstandard2.0, and narrowing the feature to exclude them is acceptable - FALSE",
+        "title": "compatibility premise falsified: System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage guarded by #if !NETSTANDARD2_0 && !NETFRAMEWORK",
+        "claim": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles on at least one excluded target; whether narrowing the requirement is acceptable is a human decision",
         "severity": "moderate",
         "evidence": [
           "condition '#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change, not a repo convention",
@@ -79,16 +79,16 @@
         ],
         "verify": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
         "status": "CONFIRMED",
-        "verify_note": "compile probe executed; premise falsified",
+        "verify_note": "compile probe confirmed API availability; requirement impact still needs human assessment",
         "test_invisible": true,
-        "from_capsule": true
+        "from_capsule": false
       }
     ],
     "assumptions_checked": 2,
     "assumptions_falsified": 1,
     "base_used": "32258fdbee4bcd653c79f51b4376b5103c6f4d27",
     "base_method": "first_parent (confirmed, oracle-checked)",
-    "bytes_read": 39263,
+    "bytes_read": 39299,
     "sources_read": 4,
     "git_calls": 1
   }

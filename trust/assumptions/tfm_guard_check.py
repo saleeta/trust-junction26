@@ -80,7 +80,7 @@ class Guard:
 class Probe:
     tfm: str
     api: str
-    compiles: bool
+    compiles: bool | None  # None means the probe did not establish availability.
     command: str
     output_tail: str = ""
 
@@ -191,7 +191,7 @@ def compile_probe(api: str, tfms: list[str], workdir: Path) -> list[Probe]:
     exe = dotnet_exe()
     probes: list[Probe] = []
     if exe is None:
-        return [Probe(t, api, False, "dotnet not found", "SDK unavailable") for t in tfms]
+        return [Probe(t, api, None, "dotnet not found", "SDK unavailable") for t in tfms]
 
     for tfm in tfms:
         d = workdir / f"probe_{tfm.replace('.', '_')}"
@@ -209,10 +209,14 @@ def compile_probe(api: str, tfms: list[str], workdir: Path) -> list[Probe]:
         try:
             p = subprocess.run([exe, "build", str(d / "p.csproj"), "-v", "q", "--nologo"],
                                capture_output=True, text=True, timeout=300)
-            ok = p.returncode == 0
-            tail = "\n".join((p.stdout + p.stderr).strip().splitlines()[-4:])
+            output = p.stdout + p.stderr
+            tail = "\n".join(output.strip().splitlines()[-8:])
+            # Only a compiler diagnostic about the missing API establishes
+            # unavailability. Restore, SDK and test-host errors are unknown.
+            ok = (True if p.returncode == 0 else False if re.search(
+                r"\berror CS(?:0234|0246|0616)\b", output) else None)
         except (OSError, subprocess.TimeoutExpired) as exc:
-            ok, tail = False, f"probe failed to run: {exc}"
+            ok, tail = None, f"probe failed to run: {exc}"
         probes.append(Probe(tfm, api, ok, cmd, tail))
     return probes
 
@@ -271,24 +275,28 @@ def analyse(repo: Path, base: str, branch: str, issue_text: str | None,
         # the falsification
         if g.guarded_api and excluded_tfms:
             f.probes = compile_probe(g.guarded_api, excluded_tfms, workdir)
-            compiles_everywhere = all(p.compiles for p in f.probes)
+            compiles_everywhere = all(p.compiles is True for p in f.probes)
             if compiles_everywhere:
                 f.verdict = "FALSIFIED"
                 f.evidence.append(
                     f"{g.guarded_api} compiles unguarded on "
                     f"{', '.join(p.tfm for p in f.probes)} - the compatibility "
                     "premise for the guard is false")
-            elif any(p.compiles for p in f.probes):
+            elif any(p.compiles is True for p in f.probes):
                 f.verdict = "FALSIFIED"
                 ok = [p.tfm for p in f.probes if p.compiles]
                 f.evidence.append(
                     f"{g.guarded_api} compiles unguarded on {ok} - the guard is "
                     "broader than any real incompatibility")
-            else:
+            elif f.probes and all(p.compiles is False for p in f.probes):
                 f.verdict = "SUPPORTED"
                 f.evidence.append(
                     f"{g.guarded_api} does not compile on {excluded_tfms} - "
                     "the guard is warranted")
+            else:
+                f.verdict = "UNCHECKABLE"
+                f.evidence.append("the compile probe did not establish API "
+                                  "availability on every excluded framework")
             f.verify = [p.command for p in f.probes]
 
         if issue_text is not None:
@@ -376,7 +384,8 @@ def main(argv: list[str] | None = None) -> int:
         if f.probes:
             print("\n  COMPILE PROBE (attribute applied with no guard)")
             for p in f.probes:
-                print(f"    {p.tfm:16} {'COMPILES' if p.compiles else 'FAILS'}")
+                print(f"    {p.tfm:16} "
+                      f"{'COMPILES' if p.compiles is True else 'API MISSING' if p.compiles is False else 'INCONCLUSIVE'}")
         print("\n  EVIDENCE")
         for e in f.evidence:
             print(f"    - {e}")

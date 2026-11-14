@@ -3,7 +3,7 @@
 demo.py - the whole thing, one command.
 
     python demo.py                 # full run, ends with `dotnet test` failing
-    python demo.py --quick         # skip compile probes and the repro build
+    python demo.py --quick         # skip the generated repro build and test
     python demo.py --branch origin/ju26-issue-2283
 
 Runs every beat in order and prints the honesty rules at the end, because a
@@ -39,9 +39,13 @@ def hdr(n: str, title: str, why: str = "") -> None:
 def run(cmd: list[str], cwd: Path, tail: int | None = None,
         grep: tuple[str, ...] | None = None) -> int:
     t0 = time.time()
-    p = subprocess.run([sys.executable, *cmd], cwd=cwd, capture_output=True,
-                       text=True, timeout=1800, encoding="utf-8",
-                       errors="replace")
+    try:
+        p = subprocess.run([sys.executable, *cmd], cwd=cwd, capture_output=True,
+                           text=True, timeout=1800, encoding="utf-8",
+                           errors="replace")
+    except subprocess.TimeoutExpired:
+        print(f"   [timed out after {time.time() - t0:.1f}s]")
+        return 2
     text = (p.stdout or "") + (p.stderr or "")
     lines = text.splitlines()
     if grep:
@@ -80,6 +84,9 @@ def main() -> int:
     expect = EXPECT_FILES.get(issue_num)
     base = subprocess.run(["git", "rev-parse", f"{args.branch}^"], cwd=REPO,
                           capture_output=True, text=True).stdout.strip()
+    if not base:
+        print(f"cannot resolve parent of {args.branch}; stopping review")
+        return 1
 
     print("=" * 78)
     print("  HOW CAN AI REVIEW CODE MADE BY AI SO THAT HUMANS CAN TRUST IT?")
@@ -87,8 +94,9 @@ def main() -> int:
     print(f"  target   {args.branch}")
     print(f"  base     {base[:9]}")
     print(f"  repo     {REPO}")
-    print("\n  The answer this demo defends: the reviewer is structurally")
-    print("  incapable of asserting a defect it has not demonstrated.")
+    print("\n  The answer this demo defends: AI supplies checkable evidence;")
+    print("  a named engineer owns the review decision.")
+    print("  Two-minute stage card: demo/review-2297.html")
 
     # ---- BEAT 0 ---------------------------------------------------------
     hdr("0", "The reviewer that was confidently wrong",
@@ -116,7 +124,8 @@ def main() -> int:
     if expect:
         cmd += ["--expect-files", f"{issue_num}={expect}"]
     cmd += ["--json", str(OUT / "bases.json")]
-    run(cmd, TRUST / "ingest")
+    if run(cmd, TRUST / "ingest"):
+        return 1
 
     # ---- BEAT 2 ---------------------------------------------------------
     hdr("2", "Assumption ledger and blast radius",
@@ -129,10 +138,11 @@ def main() -> int:
     else:
         print(f"   (no issue text captured for #{issue_num}; intent checks "
               f"will be skipped)")
-    run(cmd, TRUST / "assumptions",
+    if run(cmd, TRUST / "assumptions",
         grep=("ASSUMPTION LEDGER", "[FALSIFIED]", "[OK]", "[?]", "ASSUMPTION ",
               "BLAST RADIUS", "PRE-AIMED", "EVIDENCE", "  - ", "severity",
-              "VERIFY", "separately"))
+              "VERIFY", "separately")):
+        return 1
 
     # ---- BEAT 3 ---------------------------------------------------------
     hdr("3", "Graph retrieval instead of a context dump",
@@ -147,8 +157,28 @@ def main() -> int:
         cmd += ["--graph", str(graph)]
     if issue.exists():
         cmd += ["--issue", str(issue)]
-    run(cmd, TRUST / "memory", grep=("ingested", "store holds", "recall(",
-                                     "assumption ::", "diff ::", "issue ::"))
+    if run(cmd, TRUST / "memory", grep=("ingested", "store holds", "recall(",
+                                        "assumption ::", "diff ::", "issue ::")):
+        return 1
+
+    # ---- BEAT 3b ---------------------------------------------------------
+    hdr("3b", "The context tree: lookups, propagation, token ledger",
+        "a falsified claim re-enters the tree; the walk is measured against "
+        "a traditional agent reading the raw diff")
+    tree_json = OUT / "tree" / f"{issue_num}-tree.json"
+    tree_html = OUT / "tree" / f"{issue_num}-tree.html"
+    cmd = ["context_tree.py", "--repo", str(REPO), "--branch", args.branch,
+           "--base", base, "--json", str(tree_json), "--html", str(tree_html)]
+    if issue.exists():
+        cmd += ["--issue", str(issue)]
+    if ledger.exists():
+        cmd += ["--ledger", str(ledger)]
+    if graph.exists():
+        cmd += ["--graph", str(graph)]
+    if run(cmd, TRUST / "tree",
+           grep=("tree nodes", "full dump", "walk total", "lookup",
+                 "propagate", "wrote", "REVISITS")):
+        return 1
 
     # ---- BEAT 4 ---------------------------------------------------------
     hdr("4", "What context actually costs a model",
@@ -158,18 +188,20 @@ def main() -> int:
            "--json", str(OUT / "ab" / f"{issue_num}-llm.json")]
     if issue.exists():
         cmd += ["--issue", str(issue)]
-    run(cmd, TRUST / "ab")
+    if run(cmd, TRUST / "ab"):
+        return 1
 
     # ---- BEAT 5 ---------------------------------------------------------
-    hdr("5", "A/B: the same reviewer, with and without the capsule",
-        "shared verification stage; neither arm grades itself")
+    hdr("5", "Exploratory naive vs checked pipeline",
+        "different checks; not a causal author-capsule experiment")
     cmd = ["run_ab.py", "--repo", str(REPO), "--branch", args.branch,
            "--json", str(OUT / "ab" / f"{issue_num}.json")]
     if issue.exists():
         cmd += ["--issue", str(issue)]
     if expect:
         cmd += ["--expect-files", str(expect)]
-    run(cmd, TRUST / "ab")
+    if run(cmd, TRUST / "ab"):
+        return 1
 
     # ---- BEAT 6 ---------------------------------------------------------
     hdr("6", "You run it, not us",
@@ -181,6 +213,8 @@ def main() -> int:
         rc = run(["make_repro.py", "--repo", str(REPO), "--branch", args.branch,
                   "--ledger", str(ledger), "--out", str(repro), "--run"],
                  TRUST / "repro", tail=18)
+        if rc:
+            return rc
         if rc == 0:
             print(f"\n   Audience command:  cd {repro} && dotnet test")
 
@@ -215,8 +249,8 @@ def main() -> int:
   7. Confirmed findings and unverified hypotheses are counted separately and
      never combined into one score.
 
-  8. Token figures from --dry-run come from tiktoken cl100k_base: ratios are
-     reliable, absolute values are approximate for Claude.
+  8. Token figures from --dry-run may use tiktoken or a rough fallback. The
+     output states which. Cost is measured separately from review quality.
 """)
     print(f"  Artifacts: {OUT}")
     print(f"  Tests:     python -m pytest   (from {ROOT})")

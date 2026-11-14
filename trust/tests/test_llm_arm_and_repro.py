@@ -145,10 +145,14 @@ def test_generated_repro_has_the_expected_shape(guard_repo, tmp_path):
     assert rc_code == 0
     assert (out / "TrustRepro.csproj").exists()
     assert (out / "README.md").exists()
+    commit = guard_repo["tip"]
+    assert (out / "source_snapshot" / commit).is_dir()
+    assert commit in (out / "README.md").read_text(encoding="utf-8")
     test_src = (out / "ExcludeFromCodeCoverageTests.cs").read_text(encoding="utf-8")
 
     # the guard under test is embedded verbatim
     assert "#if !NETSTANDARD2_0" in test_src
+    assert str(out / "source_snapshot" / commit) in test_src
     # a sanity test exists so the suite cannot pass vacuously
     assert "TemplatesExist" in test_src
     # it states what it is NOT, so severity cannot be inflated on stage

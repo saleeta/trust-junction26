@@ -1,5 +1,13 @@
 # DESIGN — `trust`: Autonomous AI Code Trust System
 
+> **Implementation status.** This file records the target architecture, not
+> a list of completed features. The working prototype currently includes base
+> resolution, four assumption classes, a provenance graph for our guided #2283
+> reproduction, SQLite recall, an exploratory comparison, and a #2297 repro.
+> Fingerprinting, autonomous experiment routing, MCP, a general CLI, and a
+> decision dashboard remain proposals. See [CONCEPT_CARD.md](CONCEPT_CARD.md)
+> and [TWO_MINUTE_DEMO.md](TWO_MINUTE_DEMO.md) for the challenge deliverable.
+
 **Challenge:** How can AI review code made by AI so that humans can trust it?
 **Target:** `junction26-messagepack-csharp`, four agentic branches sharing base
 `32258fdb` ("Bump PolySharp from 1.14.1 to 1.15.0").
@@ -49,11 +57,11 @@ Three enforced properties:
    assumption that survives is a documented warrant; one that falls is a
    hidden defect that no test in the repo covers.
 
-This is why an AI reviewer can be trusted where an AI author cannot: it is
-structurally incapable of asserting a defect it has not demonstrated. And it is
-why reviewing *with* the author's context beats reviewing the diff alone — the
-diff shows what changed, the context shows what the author believed, and only
-the second can be proven wrong.
+The reviewer produces evidence for a human decision. A compile probe can
+falsify a compatibility premise, but it does not by itself prove every emitted
+consumer configuration or authorize a requirement change. When original author
+context is unavailable, the system can check implications visible in code and
+documentation without claiming to know the author's reasoning.
 
 ---
 
@@ -65,6 +73,7 @@ the second can be proven wrong.
 | C# parsing | `tree-sitter-c-sharp` | Real ASTs without needing .NET; pip-installable |
 | Build/execute | `dotnet` CLI subprocess | .NET 8 SDK (`8.0.4xx`, per `global.json`) |
 | Memory | SQLite + FTS5 (stdlib) | Zero deps; full-text evidence retrieval |
+| Memory (challenge track) | **MongoDB Atlas** | `trust/tree/mongo_tree.py`: nodes/edges/traversals collections; `$graphLookup` traversal paths, aggregation token ledger. Same JSON out as the offline tree; `MONGO_URI` selects the backend |
 | Patterns | YAML | Declarative, shareable, reviewable by humans |
 | CLI | Typer | `trust hunt . --base main` |
 | LLM | Claude (Opus 5 / Sonnet 5.5) | Hypothesis authoring + experiment synthesis |
@@ -72,8 +81,9 @@ the second can be proven wrong.
 Fallback if the tree-sitter grammar won't install: regex heuristics behind the
 same `Fingerprinter` interface. The interface is the seam; the parser is not.
 
-**Gate:** .NET 8 SDK is not installed on the dev machine. Stages 1–5 and 9–11
-below do not need it. Stages 6–8 do.
+**Tooling:** .NET 8 SDK is installed on the demo machine, though `dotnet` may
+need its explicit Windows path. The generated repro still depends on a working
+test host and should be prechecked before a live presentation.
 
 ---
 
@@ -171,6 +181,32 @@ Retrieval (#6) is FTS5 + symbol-scoped lookup returning **cited snippets**, neve
 whole conversations: the agent's context window stays small and every retrieved
 line keeps its origin. AI conversation ingestion (#5) is an optional adapter
 over the same schema, so the pipeline runs identically with or without it.
+
+### `trust.tree` — the context tree, walkable and measured (challenge track)
+
+Arranges everything a review knows about a branch into one tree — issue,
+diff files→hunks, the assumption ledger (each assumption with evidence, impact
+sites, pre-aimed hypotheses), and the session capsule. Two pass kinds make
+traversal observable:
+
+- **lookup** — a question enters at its best node; only the root→entry path is
+  counted (tokens included), which is the "pull in only what it needs" walk.
+- **propagation** — every FALSIFIED assumption re-enters the tree and its
+  whole subtree (sites + hypotheses) is revisited; revisits are counted, which
+  is the blast radius expressed as recurring traversal.
+
+Two backends behind one output schema:
+
+- `context_tree.py` — deterministic in-process walk (zero deps; the demo never
+  dies on stage without a network).
+- `mongo_tree.py` — the same walk on **MongoDB Atlas**: nodes/edges/
+  traversals collections, `$graphLookup` for both traversal directions
+  (child→parent lookup path; parent→child blast radius, `depthField`
+  attached), aggregation pipeline for the per-pass token ledger, and every
+  pass persisted as a `traversals` document (the audit trail). `MONGO_URI`
+  selects the backend; both emit the same JSON so `render_tree.py`'s
+  standalone HTML (tree + visit highlighting + pass ledger + A/B bars vs a
+  traditional agent reading the raw diff) is backend-agnostic.
 
 ### `trust.capsule` — sprint #15 (PR Intent Capsules)
 
@@ -288,9 +324,9 @@ MCP tools: `analyze_repo`, `get_fingerprints`, `hunt`, `get_findings`,
 
 ## 5. Demo — "better debuggable, before vs. after"
 
-The deliverable is a measured A/B, not a tour of features. Same repo, same
-branches, same reviewer engine; the only variable is **whether the author
-agent's context is attached**.
+The implemented comparison is exploratory. Its naive arm and checked arm differ
+in both base resolution and available checks, so it cannot isolate the causal
+value of an author capsule. Tieto's branches have no original author sessions.
 
 | | Arm A — "before" | Arm B — "after" |
 |---|---|---|
@@ -351,8 +387,8 @@ the only honest source.
 
 ### 5.2 The measured comparison
 
-Both arms run the same fingerprint → plan → route → execute → verify pipeline.
-Metrics, all objective:
+The table below records proposed evaluation metrics. The implemented arms do
+not run the proposed fingerprint → plan → route pipeline.
 
 | Metric | Why it is the right number |
 |---|---|

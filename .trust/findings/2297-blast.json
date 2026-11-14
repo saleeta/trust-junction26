@@ -9,11 +9,11 @@
       "check_cmd": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
       "verdict": "FALSIFIED",
       "evidence": [
-        "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdb - introduced by this change",
+        "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change",
         "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the premise is false",
         "the originating issue does not mention target frameworks - the conditionality was not requested"
       ],
-      "reconstructed": true
+      "reconstructed": false
     },
     "sites": [
       {
@@ -66,9 +66,9 @@
       },
       {
         "kind": "snapshot",
-        "ref": "220 verified snapshots",
+        "ref": "222 verified snapshots",
         "why": "regenerated WITH the guard, so the tests now assert the guarded output is correct",
-        "count": 220
+        "count": 222
       }
     ],
     "hypotheses": [
@@ -99,7 +99,7 @@
         "assumption_id": "tfm-guard-0",
         "failure_mode": "test_codifies_the_gap",
         "rationale": "the verified snapshots were regenerated with the guard, so snapshot tests assert the narrowed output is correct and can never fail on it",
-        "site": "220 verified snapshots",
+        "site": "222 verified snapshots",
         "strategy": "static",
         "priority": 2.5,
         "expected_observation": "removing the guard makes snapshot tests fail, proving they pin the gap",
@@ -189,7 +189,7 @@
         "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles on net472, netstandard2.0, so the documented availability constraint is factually wrong",
         "no test reads documentation, so this claim cannot be caught by the suite"
       ],
-      "reconstructed": true
+      "reconstructed": false
     },
     "sites": [
       {
@@ -239,7 +239,7 @@
       "evidence": [
         "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0']. A green suite is evidence about one configuration only."
       ],
-      "reconstructed": true
+      "reconstructed": false
     },
     "sites": [
       {
@@ -349,7 +349,7 @@
       "evidence": [
         "all 6 touched pair(s) changed on both sides"
       ],
-      "reconstructed": true
+      "reconstructed": false
     },
     "sites": [],
     "hypotheses": [],

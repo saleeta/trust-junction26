@@ -1,5 +1,9 @@
 # Generated repro - origin/ju26-issue-2297
 
+Pinned commit: `a0aa5ab2de7f5a669d97e37184a89034c1de82b6`. Sources are copied from that git object into
+`source_snapshot/a0aa5ab2de7f5a669d97e37184a89034c1de82b6/`, so switching the working checkout cannot change
+the result.
+
 One command:
 
     dotnet test
@@ -31,3 +35,5 @@ attribute. Verify that yourself, without trusting this repro:
 - Not a complaint about the whole change. The same agent updated all six
   templates, regenerated 222 snapshots consistently, and kept `.tt`/`.cs` in
   sync. Only the target-framework conditionality is wrong.
+- This test detects the guard in template text. The compile probes separately
+  establish API availability. It does not compile the full generated output.

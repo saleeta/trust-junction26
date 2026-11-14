@@ -1,10 +1,15 @@
-# DEMO — runnable script
+# DEMO — technical backup walkthrough
+
+For the two-minute presentation, use [TWO_MINUTE_DEMO.md](TWO_MINUTE_DEMO.md)
+and the generated review receipt. This document is an extended technical
+walkthrough. Saved measurements below came from particular environments; rerun
+before quoting numbers. `--dry-run` measures context size, not finding quality.
 
 Every command below has been run on this machine. One command runs it all:
 
 ```bash
 python demo.py            # beats 0-6, ends with `dotnet test` failing (expected)
-python demo.py --quick    # skip compile probes and the repro build
+python demo.py --quick    # skip the generated repro build and test
 ```
 
 Prerequisites: Python 3.11+, .NET 8 SDK, the target repo cloned at `./repo`.
@@ -97,10 +102,49 @@ python recall.py --rebuild --db ../../.trust/memory.db --repo ../../repo \
     --budget 1200 --query "why is the attribute guarded by a target framework"
 ```
 
-Observed: 91 evidence rows (13,050 tokens dumped whole). The question is
-answered in **1,195/1,200 tokens (91% saved)**, every hit carrying a citation
-and a verify command. Retrieval is the mechanism behind "pull in only what it
+The store returns cited snippets within the token budget. Exact totals depend
+on the installed tokenizer and the current ledger; use the command output for
+current numbers. Retrieval is the mechanism behind "pull in only what it
 needs".
+
+## Beat 3b — The context tree: lookups, propagation, token ledger (60 s)
+
+The evidence is arranged as a tree, and every review question is a measured
+walk through it. When a claim is falsified, the walk **re-enters the tree**
+and recursively visits the claim's blast radius.
+
+```bash
+cd ../tree
+python context_tree.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --base 32258fdb --issue ../../.trust/issues/2297.md \
+    --ledger ../../.trust/findings/2297-blast.json \
+    --graph ../session_graph/session_graph.json \
+    --json ../../.trust/tree/2297-tree.json \
+    --html ../../.trust/tree/2297-tree.html
+```
+
+The command prints the tree size, the full-dump cost, and every pass with its
+token cost and revisits. Open `2297-tree.html`: blue nodes are the lookup
+path, red nodes are falsification propagation, purple nodes were revisited,
+and the right panel shows the pass ledger plus A/B bars — graph walker vs. a
+traditional agent reading the full diff vs. a triaged agent. Quality of a
+live traditional agent is labelled "not measured in dry-run".
+
+**MongoDB Atlas backend (challenge track).** The same walk can run on Atlas:
+nodes, edges and traversals live in collections, `$graphLookup` computes the
+lookup paths and the propagation subtrees, an aggregation pipeline sums the
+token ledger, and every pass is written to a `traversals` document:
+
+```bash
+MONGO_URI="mongodb+srv://<user>:<pass>@<cluster>/trust_demo" \
+python mongo_tree.py --repo ../../repo --branch origin/ju26-issue-2297 \
+    --base 32258fdb --issue ../../.trust/issues/2297.md \
+    --ledger ../../.trust/findings/2297-blast.json \
+    --json ../../.trust/tree/2297-tree.mongo.json
+```
+
+Without `MONGO_URI` the offline engine runs and the output says which backend
+ran. Both paths emit the same JSON, so the viewer works identically.
 
 ## Beat 4 — What context actually costs a model (30 s)
 
@@ -111,28 +155,25 @@ python llm_arm.py --repo ../../repo --branch origin/ju26-issue-2297 \
     --issue ../../.trust/issues/2297.md
 ```
 
-Observed on the 237-file diff: full dump **79,250** prompt tokens →
-full-triaged **5,644** (the fair baseline: a competent reviewer drops generated
-files first) → recall **2,529** with citations. **96.8% under the naive
-baseline, 55.2% under the fair one.** On a 4-file diff (ju26-re-2283) recall
-saves only 23.6% — the fixed costs dominate. The claim scales with the diff,
-and we say so. Token counts are tiktoken cl100k_base estimates; ratios are
-reliable, absolutes approximate.
+The command compares a full diff, a diff with generated files triaged, and
+cited retrieval. It reports whether counts use `tiktoken` or a rough
+character-based estimate. These are context-size measurements only; no review
+quality is measured in `--dry-run`.
 
-## Beat 5 — A/B: the same reviewer, with and without the capsule (30 s)
+## Beat 5 — exploratory naive vs checked pipeline (30 s)
 
 ```bash
 python run_ab.py --repo ../../repo --branch origin/ju26-issue-2297 \
     --issue ../../.trust/issues/2297.md --expect-files 237
 ```
 
-Observed: Arm A (no capsule) resolves the wrong base and produces **1 false
-finding** (50% precision). Arm B (capsule) resolves the oracle-checked base,
-finds the **test-invisible feature gap**, 100% precision. Both arms share the
-verification stage; neither grades itself. Arm B loads more *bytes* for these
-deterministic analyzers, and the tool prints that loss itself — the
-"more context, fewer tokens" claim is only made where measured (Beat 4), never
-where disproved.
+The naive arm resolves the wrong base and produces a false finding. The checked
+arm resolves the branch parent and runs an additional framework probe that
+finds a test-invisible feature gap. **This is not a controlled capsule A/B:**
+Tieto supplied no author transcript for #2297 and the arms run different
+checks. Do not present the precision percentages as evidence that a capsule
+caused the improvement. The probe verifies API availability; the generated
+output still requires human assessment.
 
 ## Beat 6 — You run it, not us (30 s)
 
@@ -240,5 +281,5 @@ conditions.
    session, labelled guided, never presented as theirs.
 7. Confirmed findings and unverified hypotheses are counted separately and
    never combined into one score.
-8. Token figures from `--dry-run` come from tiktoken cl100k_base: ratios are
-   reliable, absolute values are approximate for Claude.
+8. Token figures from `--dry-run` may use tiktoken or a rough fallback. The
+   output states which; neither measures review quality.
