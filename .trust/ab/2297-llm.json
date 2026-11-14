@@ -1,0 +1,41 @@
+[
+  {
+    "strategy": "full",
+    "prompt_tokens": 79250,
+    "evidence_tokens": 78767,
+    "hits": 237,
+    "dropped": 0,
+    "citations": false,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  },
+  {
+    "strategy": "full-triaged",
+    "prompt_tokens": 5644,
+    "evidence_tokens": 5161,
+    "hits": 15,
+    "dropped": 0,
+    "citations": false,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  },
+  {
+    "strategy": "recall",
+    "prompt_tokens": 2511,
+    "evidence_tokens": 2027,
+    "hits": 16,
+    "dropped": 27,
+    "citations": true,
+    "estimated": false,
+    "completion_tokens": 0,
+    "api_prompt_tokens": 0,
+    "response": "",
+    "error": ""
+  }
+]

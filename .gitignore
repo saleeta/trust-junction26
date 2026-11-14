@@ -7,3 +7,6 @@ trust/session_graph/*.html
 session_graph.json
 .trust/cache/
 .trust/probes/
+.trust/repro/*/bin/
+.trust/repro/*/obj/
+.trust/memory.db

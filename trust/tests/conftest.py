@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-for sub in ("session_graph", "ingest", "assumptions", "ab"):
+for sub in ("session_graph", "ingest", "assumptions", "ab", "memory", "repro"):
     p = str(ROOT / sub)
     if p not in sys.path:
         sys.path.insert(0, p)
