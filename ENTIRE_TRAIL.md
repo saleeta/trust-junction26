@@ -1,7 +1,22 @@
 # Planned Entire Trail: Evidence-backed review of AI-made code
 
-**Status:** prepared locally; hosted Trail pending CLI auth (device flow
-started 2026-11-14, network to `eu.auth.entire.io` restored).
+**Status:** LIVE 2026-11-14.
+
+- Project: `et/earned-trust-review` (EU, aws-eu-central-1, private, account-owned)
+- Repository: `et/earned-trust-review/trust` (private) — hosts this project's
+  code on `master`, the reviewed patch on `review/2297`, and the true base on
+  `base/2297` (= `32258fdb`)
+- Trail #1: https://entire.com/et/earned-trust-review/-/trails/1
+  "Review AI-made patch for MessagePack-CSharp #2297 against its requirement"
+  - change trust/1: https://entire.com/et/earned-trust-review/-/trails/1/changes/trust/1
+  - branch `review/2297` retargeted onto `base/2297` (the patch's real parent)
+  - findings attached: HIGH falsified-assumption guard
+    (CompositeResolverTemplate.tt:7, with suggested patch) and MEDIUM false
+    README claim (README.md:1640, with suggested patch)
+  - AI recommendation: request changes. Human decision: pending.
+- Raw re-enactment session data is excluded from pushes (gitignored, pending
+  clearance review); the Entire session-attach step is scheduled after the
+  Claude usage limit resets so a fresh, cleared session can be captured.
 
 ## How the project maps onto the Entire challenge
 
