@@ -1,0 +1,8 @@
+# the repo under review is a separate clone, not part of this project
+/repo/
+__pycache__/
+*.pyc
+# generated demo outputs
+*.html
+session_graph.json
+.trust/cache/
