@@ -137,9 +137,30 @@ def resolve(git: Git, branch: str, expect_files: int | None = None) -> BaseRecor
                 rec.candidates.append(Candidate(f"fork_point[{cand}]", fp))
             break
 
-    real = [c for c in rec.candidates if c.sha]
+    # A base equal to the branch tip yields an empty diff, which downstream
+    # reads as "no changes to review" - a silent failure worse than an error.
+    # A base that is not an ancestor of the tip is meaningless too.
+    tip = git.ok("rev-parse", branch)
+    rejected: list[Candidate] = []
+    for c in rec.candidates:
+        if not c.sha:
+            continue
+        if tip and c.sha == tip:
+            c.note = "equals the branch tip - would produce an empty diff"
+            rejected.append(c)
+        elif git.ok("merge-base", "--is-ancestor", c.sha, branch) is None and \
+                subprocess.run(["git", "merge-base", "--is-ancestor", c.sha, branch],
+                               cwd=git.repo, capture_output=True).returncode != 0:
+            c.note = "not an ancestor of the branch"
+            rejected.append(c)
+
+    real = [c for c in rec.candidates if c.sha and c not in rejected]
     if not real:
-        rec.warnings.append("no method produced a base commit")
+        rec.warnings.append(
+            "no method produced a usable base commit"
+            + (f" ({len(rejected)} candidate(s) rejected: "
+               + "; ".join(f"{c.method} {c.note}" for c in rejected) + ")"
+               if rejected else ""))
         return rec
 
     # first_parent is authoritative for "what did the agent branch from",
