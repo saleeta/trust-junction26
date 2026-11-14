@@ -49,6 +49,7 @@ def load_artifacts(root: Path) -> dict:
         "review": load_json(root / "demo" / "review-2297.json"),
         "proof": load_json(root / ".trust" / "findings" / "2297-proof.json"),
         "toy": load_json(root / "toy" / "out" / "review.json"),
+        "accept": load_json(root / "toy" / "out" / "accept.json"),
     }
 
 
@@ -634,6 +635,104 @@ def s_expand(d: dict) -> str:
     </div>"""
 
 
+def s_digest(d: dict) -> str:
+    """Issues framed human-first: one-line digest, then line-level truth tags."""
+    toy = d.get("toy") or {}
+    claims = toy.get("claims") or []
+    files = toy.get("files") or {}
+    label_cls = {"Refuted": "bad", "Proved within scope": "ok",
+                 "Tested": "mid", "Unknown": "dim"}
+    lines = ""
+    for c in claims:
+        cls = label_cls.get(c.get("label"), "dim")
+        lines += (f"<div class='digest-row'><span class='chip {cls}'>"
+                  f"{esc(c.get('label'))}</span> <b>{esc(c.get('id'))}</b> "
+                  f"{esc(c.get('short', ''))} "
+                  f"<span class='dim'>- {esc(c.get('plain', '')[:90])}</span></div>")
+
+    # line-level tags: the actual code lines and which claims live on them
+    code_lines = ""
+    prices = files.get("shop/prices.py")
+    if prices:
+        by_id = {c["id"]: c for c in claims}
+        for l in prices:
+            tags = ""
+            for cid in l.get("claims") or []:
+                c = by_id.get(cid, {})
+                cls = label_cls.get(c.get("label"), "dim")
+                tags += (f"<span class='linetag {cls}'>{esc(c.get('label', '?'))}"
+                         f" {esc(cid)}</span>")
+            changed = l.get("changed", False)
+            code_lines += (f"<div class='codeline{' changed' if changed else ''}'>"
+                           f"<span class='ln'>{l.get('n')}</span>"
+                           f"<span class='code'>{esc(l.get('text', '')) or ' '}</span>"
+                           f"{tags}</div>")
+    else:
+        code_lines = ("<div class='codeline'><span class='ln'>1</span>"
+                      "<span class='code'>MAX_DISCOUNT = 0.5  # cap every discount</span>"
+                      "<span class='linetag bad'>REFUTED B2</span></div>"
+                      "<div class='codeline'><span class='ln'>6</span>"
+                      "<span class='code'>return base * (1 - sum(capped))</span>"
+                      "<span class='linetag bad'>REFUTED A1</span>"
+                      "<span class='linetag bad'>REFUTED D1</span></div>")
+    return f"""
+    <h2>The digest - issues first, truths on the lines</h2>
+    <div class="split">
+      <div class="card">
+        <h3>1 · what to read first (human)</h3>
+        {lines or '<p class="dim">run python toy/review.py first</p>'}
+      </div>
+      <div class="card code">
+        <h3>2 · where each truth lives</h3>
+        <p class="dim">tags show the verdict of the claim that line carries - the
+        same claims the drill-down panel opens</p>
+        {code_lines}
+      </div>
+    </div>
+    <p class="dim center">first the concise story, then the line, then the formal
+    claim, the rule and the re-runnable checker - never the other way around.</p>"""
+
+
+def s_acceptance(d: dict) -> str:
+    accept = d.get("accept") or {}
+    if not accept:
+        return ("<h2>The named acceptance</h2><p>run "
+                "<code>python toy/accept.py</code> first</p>")
+    results = accept.get("results") or {}
+    human = accept.get("human") or {}
+    rows = ""
+    for cid, r in results.items():
+        v = r.get("verdict", "?")
+        cls = {"Proved within scope": "ok", "Refuted": "bad",
+               "Tested": "mid", "Unknown": "dim"}.get(v, "dim")
+        rows += (f"<div class='vrow'><span class='chip {cls}'>{esc(v)}</span> "
+                 f"<b>{esc(cid)}</b> <span class='dim'>- {esc(r.get('note', ''))}</span></div>")
+    decision = human.get("decision", "pending")
+    name = human.get("name") or "unnamed"
+    return f"""
+    <h2>The completed outcome - a named engineer accepted</h2>
+    <div class="split">
+      <div class="card good">
+        <h3>the corrected sample (toy PR #5)</h3>
+        <p>PR #4 was refuted; PR #5 caps the TOTAL discount at 100% and keeps
+        VIP 60% intact. The same checkers re-ran:</p>
+        {rows}
+        <p><code>sha {esc(str(accept.get('sha', ''))[:9])}</code></p>
+      </div>
+      <div class="card">
+        <h3>the signed decision</h3>
+        <p><span class="chip ok">{esc(name)}</span>
+           <span class="chip {'ok' if decision == 'approved' else 'mid'}">{esc(decision)}</span></p>
+        <p class="dim">{esc(human.get('note', ''))}</p>
+        <p>recorded on Entire Trail #2:
+        <a href="https://entire.com/et/earned-trust-review/-/trails/2" target="_blank">
+        entire.com/et/earned-trust-review/-/trails/2</a></p>
+        <p class="blast">Trail #1 (#2297, the known gap) stays PENDING - the
+        pending sample and the accepted sample are never merged into one story.</p>
+      </div>
+    </div>"""
+
+
 # ---------------------------------------------------------------------------
 # Part 2: the real PR, proof-carrying
 # ---------------------------------------------------------------------------
@@ -762,6 +861,8 @@ SLIDES = [
     ("What the colors mean", s_colors),
     ("Current PR vs previous PRs", s_history),
     ("Expanding the search space", s_expand),
+    ("The digest: issues first", s_digest),
+    ("The named acceptance", s_acceptance),
     ("The real PR: setup", s_setup),
     ("Before: the wrong review", s_before),
     ("After: the checked base", s_after),
@@ -891,6 +992,17 @@ nav button:hover{border-color:#4d8ff0}
 .hmain{font-weight:600;margin-bottom:6px}
 .hsubs{display:flex;gap:10px;flex-wrap:wrap}
 .hsub{font-size:13px;background:#1c2740;border-radius:8px;padding:4px 10px}
+.digest-row{padding:6px 0;border-bottom:1px dotted #253251;font-size:14px}
+.codeline{display:flex;gap:8px;align-items:baseline;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;padding:3px 6px;border-radius:5px;flex-wrap:wrap}
+.codeline.changed{background:#122a4d;outline:1px solid #4d8ff0}
+.codeline .ln{color:#7f8db0;min-width:22px;text-align:right}
+.codeline .code{color:#c9d6ef;white-space:pre-wrap}
+.linetag{font:700 10px system-ui;border-radius:9px;padding:1px 8px;letter-spacing:.04em}
+.linetag.bad{background:#4d1620;color:#ff9d9d}
+.linetag.ok{background:#123d24;color:#7ce3a0}
+.linetag.mid{background:#4d3d12;color:#ffd98a}
+.linetag.dim{background:#2a2f42;color:#8b94ac}
+.card.good{border-color:#1f5c3c}
 """
 
 _JS = r"""

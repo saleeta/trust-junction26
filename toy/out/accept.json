@@ -1,0 +1,48 @@
+{
+  "branch": "pr5",
+  "sha": "221bc6230b1897a7b7940daa22985d18cd61f765",
+  "results": {
+    "A1": {
+      "verdict": "Proved within scope",
+      "checked": 16,
+      "witnesses": [],
+      "note": "every basket in the domain charges >= 0"
+    },
+    "B2": {
+      "verdict": "Proved within scope",
+      "checked": 1,
+      "witnesses": [],
+      "note": "VIP total is 40.0 (promised 40)"
+    },
+    "D1": {
+      "verdict": "Proved within scope",
+      "checked": 16,
+      "witnesses": [],
+      "note": "loyalty points never negative"
+    },
+    "D2": {
+      "verdict": "Proved within scope",
+      "checked": 16,
+      "witnesses": [],
+      "note": "a sale never lowers revenue"
+    },
+    "T1": {
+      "verdict": "Tested",
+      "checked": 2,
+      "witnesses": [],
+      "note": "unit tests executed via unittest discover"
+    },
+    "U1": {
+      "verdict": "Unknown",
+      "checked": 0,
+      "witnesses": [],
+      "note": "the 100% cap is a product decision - recorded in the README and decided by the named human"
+    }
+  },
+  "ai_recommendation": "merge",
+  "human": {
+    "name": "Saleeta Qadir",
+    "decision": "approved",
+    "note": "recorded via the Entire Trail discussion (approvals gate disabled for this project)"
+  }
+}

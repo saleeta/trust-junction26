@@ -29,6 +29,15 @@ def final_price(base, discounts):
     capped = [min(d, MAX_DISCOUNT) for d in discounts]
     return base * (1 - sum(capped))
 '''
+PRICES5 = '''def final_price(base, discounts):
+    """Price after discounts. A discount of 0.2 means 20% off.
+
+    The total discount is capped at 100%: a customer is never charged a
+    negative price, and no single discount (VIP 60%) is limited on its own.
+    """
+    total = min(sum(discounts), 1.0)
+    return base * (1 - total)
+'''
 COUPONS = '''COUPONS = {"WELCOME": 0.10, "HALF": 0.50, "VIP": 0.60}
 
 
@@ -108,6 +117,10 @@ def build() -> Path:
     git("add", "-A"); git("commit", "-qm", "PR #3: bulk, member, checkout, ledger, tests", date="2026-01-03T12:00:00"); git("tag", "pr3")
     w("shop/prices.py", PRICES4); w("README.md", README4)
     git("add", "-A"); git("commit", "-qm", "PR #4: cap discounts (AI patch)", date="2026-01-04T12:00:00"); git("tag", "pr4")
+    # PR #5: the CORRECTED, human-accepted sample - total discount capped at
+    # 100%, VIP 60% intact. This is the branch the named engineer signs.
+    w("shop/prices.py", PRICES5); w("README.md", README4 + "Discounts add up, but the total discount is capped at 100%.\\n")
+    git("add", "-A"); git("commit", "-qm", "PR #5: cap total discount at 100% (human-approved fix)", date="2026-01-05T12:00:00"); git("tag", "pr5")
     return REPO
 
 

@@ -244,6 +244,11 @@ const strip=document.createElement('div');strip.id='vs-strip';strip.className='v
 const truthPanel=document.createElement('section');truthPanel.id='truth-panel';truthPanel.className='truth-panel';truthPanel.style.display='none';
 truthPanel.setAttribute('aria-label','Core truths of the selected belief');
 document.querySelector('figure').after(truthPanel);
+/* concise human-first digest above the figure; click opens that row's truths */
+const digest=document.createElement('div');digest.id='digest';digest.className='digest';
+const digestTitle=document.createElement('p');digestTitle.textContent='What to read first:';digest.appendChild(digestTitle);
+example.forEach((e,i)=>{const b=document.createElement('button');b.type='button';b.className='digest-item';b.textContent=`${e.title} · ~${e.tokens}t`;b.onclick=()=>{setStep(i+1);openTruth(i)};digest.appendChild(b)});
+by('notice').after(digest);
 setPipeline(true);
 by('repo-url').value='https://github.com/te-industry-tech-office/junction26-messagepack-csharp';
 loadRepo(by('repo-url').value);
@@ -288,7 +293,14 @@ def build(review: dict, template: str) -> str:
               "font-size:12.5px;color:var(--ink)}.truth-panel .t-cmd{font:13px "
               "Consolas,monospace;background:#f2f0e9;border:1px solid var(--hair);"
               "border-radius:3px;padding:6px 9px;cursor:pointer;color:var(--ink);"
-              "margin:6px 0 0}")
+              "margin:6px 0 0}"
+              ".digest{display:flex;flex-wrap:wrap;gap:6px;align-items:center;"
+              "margin-bottom:10px}.digest p{font:700 12px Consolas,monospace;"
+              "letter-spacing:.08em;text-transform:uppercase;color:var(--muted);"
+              "margin:0 6px 0 0}.digest-item{border:1px solid var(--hair);"
+              "background:transparent;border-radius:3px;padding:4px 9px;"
+              "font-size:12.5px;color:var(--ink);cursor:pointer}.digest-item:hover{"
+              "border-color:var(--accent)}")
     template = template.replace("</style>", vs_css + "\n</style>", 1)
     # replace the whole inline script with the data-driven one
     start = template.index("<script>\nconst S=")
