@@ -14,8 +14,10 @@ def test_timed_architecture_deck_and_published_copy():
     assert source == published
     durations = [int(n) for n in re.findall(r'data-duration="(\d+)"', source)]
     assert len(durations) == 7 and sum(durations) == 120
-    for fact in ("Requirements", "Current code", "Agent context", "MongoDB Atlas",
-                 "Entire collaboration layer", "$graphLookup", "Scoped formal verification",
+    for fact in ("Requirements", "Current code", "Entire", "MongoDB Atlas",
+                 "$graphLookup", "CANDIDATE CLAIM", "source_kind: implicit_in_code",
+                 "check_cmd:", "parent SHA", "check matrix",
+                 "hypothesis · unconfirmed", "Scoped formal verification",
                  "net472", "netstandard2.0", "Human decision", "Pending."):
         assert fact.lower() in source.lower()
     assert 'href="review-2297.html"' in source
