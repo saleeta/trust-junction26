@@ -1,0 +1,61 @@
+[
+  {
+    "id": "tfm-guard-0",
+    "assumption": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage is unavailable on net472, netstandard2.0, and narrowing the feature to exclude them is acceptable",
+    "verdict": "FALSIFIED",
+    "severity": "moderate",
+    "guards": [
+      {
+        "file": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+        "condition": "!NETSTANDARD2_0 && !NETFRAMEWORK",
+        "excluded_symbols": [
+          "NETSTANDARD2_0",
+          "NETFRAMEWORK"
+        ],
+        "guarded_api": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+        "preexisting": false
+      }
+    ],
+    "probes": [
+      {
+        "tfm": "net472",
+        "api": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+        "compiles": true,
+        "command": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
+        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.38"
+      },
+      {
+        "tfm": "netstandard2.0",
+        "api": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+        "compiles": true,
+        "command": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_netstandard2_0\\p.csproj\" -v q --nologo",
+        "output_tail": "    0 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:01.50"
+      }
+    ],
+    "shipped_tfms": [
+      "net472",
+      "net8.0",
+      "netstandard2.0",
+      "netstandard2.1"
+    ],
+    "test_tfms": [
+      "net8.0"
+    ],
+    "affected_tfms": [
+      "net472",
+      "netstandard2.0"
+    ],
+    "test_observable": false,
+    "evidence": [
+      "condition '#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdb - introduced by this change, not a repo convention",
+      "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0'] - the guard is always satisfied in CI, so no test can observe the excluded path",
+      "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the compatibility premise for the guard is false",
+      "the originating issue does not mention target frameworks at all - the conditionality was introduced by the implementer, not requested"
+    ],
+    "consequence": "the feature silently does not apply to net472, netstandard2.0, which the library ships. No existing test can detect this: all test projects target net8.0, where the guard always passes.",
+    "verify": [
+      "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
+      "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_netstandard2_0\\p.csproj\" -v q --nologo"
+    ]
+  }
+]

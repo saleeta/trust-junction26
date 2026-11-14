@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 # generated demo outputs
-*.html
+trust/session_graph/*.html
 session_graph.json
 .trust/cache/
+.trust/probes/
