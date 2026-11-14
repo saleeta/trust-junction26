@@ -12,6 +12,21 @@
   },
   "claims": [
     {
+      "id": "C-2297-0",
+      "statement": "the patch satisfies issue #2297: all generated code is decorated with ExcludeFromCodeCoverage",
+      "formal": "SATISFIES(REQ-2297)",
+      "scope": {
+        "split": "the main task is decided by its sub-claims; a main claim is REFUTED when any sub-claim is REFUTED"
+      },
+      "line_links": [],
+      "level": "main",
+      "depends_on": [
+        "C-2297-1",
+        "C-2297-2",
+        "C-2297-3"
+      ]
+    },
+    {
       "id": "C-2297-1",
       "statement": "all generated code declarations carry ExcludeFromCodeCoverage",
       "formal": "FORALL t in ShippedTFMs, d in GeneratedDeclarations(t): has(d, ExcludeFromCodeCoverage)",
@@ -66,7 +81,9 @@
           "line": 10,
           "text": "#if !NETSTANDARD2_0 && !NETFRAMEWORK"
         }
-      ]
+      ],
+      "level": "sub",
+      "depends_on": []
     },
     {
       "id": "C-2297-2",
@@ -75,7 +92,9 @@
       "scope": {
         "pairs": "T4 templates and their committed outputs"
       },
-      "line_links": []
+      "line_links": [],
+      "level": "sub",
+      "depends_on": []
     },
     {
       "id": "C-2297-3",
@@ -84,7 +103,9 @@
       "scope": {
         "suites": "test projects' TargetFrameworks"
       },
-      "line_links": []
+      "line_links": [],
+      "level": "sub",
+      "depends_on": []
     }
   ],
   "rules": [
@@ -221,8 +242,42 @@
           "note": ""
         }
       ]
+    },
+    {
+      "claim": "C-2297-0",
+      "rule": "R-hierarchy",
+      "verdict": "REFUTED",
+      "witness": {
+        "decided_by": {
+          "C-2297-1": "REFUTED",
+          "C-2297-2": "PROVED_IN_SCOPE",
+          "C-2297-3": "REFUTED"
+        }
+      },
+      "evidence": [
+        {
+          "kind": "checker_output",
+          "value": "aggregated from sub-claim verdicts {\"C-2297-1\": \"REFUTED\", \"C-2297-2\": \"PROVED_IN_SCOPE\", \"C-2297-3\": \"REFUTED\"}",
+          "note": ""
+        }
+      ]
     }
   ],
+  "hierarchy": {
+    "main": "C-2297-0",
+    "main_verdict": "REFUTED",
+    "sub": [
+      "C-2297-1",
+      "C-2297-2",
+      "C-2297-3"
+    ],
+    "sub_verdicts": {
+      "C-2297-1": "REFUTED",
+      "C-2297-2": "PROVED_IN_SCOPE",
+      "C-2297-3": "REFUTED"
+    },
+    "rule": "a main claim is REFUTED when any sub-claim is REFUTED; PROVED_IN_SCOPE only when every sub-claim is"
+  },
   "label_legend": {
     "PROVED_IN_SCOPE": "a checker established a precisely stated property under listed assumptions",
     "REFUTED": "the checker found a counterexample",

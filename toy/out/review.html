@@ -115,7 +115,6 @@ const panel=document.getElementById("panel");
 const badge=c=>`<span class="badge b-${L(c.label)}">${c.label.toUpperCase()}</span>`;
 const wit=w=>Object.values(w).map(v=>Array.isArray(v)?v.map(x=>x===""?"no coupon":x===true?"member":x===false?"non-member":x).join(", "):v).join(" | ");
 function chainHtml(c){if(!c.chain||!c.chain.length)return"";return `<div class="k">How the problem travels</div><div class="chain">${c.chain.map(n=>`<span class="f bad">${n}()</span>`).join(" ← ")}</div><div class="small">The first function is where the doubt starts; every function after it calls the one before it, so it inherits the doubt.</div>`}
- return `<div class="k">How the problem travels</div><div class="chain">${ch.join(" ← ")}</div><div class="small">final_price is refuted (A1), so every function above it that calls it inherits the doubt.</div>`}
 function proof(c){const linked=[];for(const f in D.files)D.files[f].forEach(l=>{if(l.claims.includes(c.id))linked.push(`${f.split("/").pop()}:${l.n}`)});
  let h=`<h3>${c.id} · ${c.short} ${badge(c)}</h3><div class="say"><b>In plain words:</b> ${c.plain}</div>`;
  if(c.example)h+=`<div class="ex"><b>Concrete example:</b> ${c.example}</div>`;

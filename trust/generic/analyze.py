@@ -57,7 +57,7 @@ SKIP_FILE = re.compile(r"(^|/)(node_modules|vendor|dist|build|\.git|third_party)
 TEST_FILE = re.compile(r"(^|/)(tests?|spec|specs|__tests__|e2e|testing)(/|$)|(_test|\.test|\.spec|Tests?|Spec)\.\w+$|(^|/)test_\w+")
 DOC_FILE = re.compile(r"\.(md|rst|txt|adoc)$", re.I)
 ABSOLUTE = re.compile(r"\b(never|always|only|must|every|all|guarantee[sd]?|cannot|exactly|at most|at least|no longer|is safe|thread[- ]safe)\b", re.I)
-IMPORT = re.compile(r"^\s*(from\s+\S+\s+import|import|using|use|#\s*include|require|export\s*\{|.*=\s*require\()")
+IMPORT = re.compile(r"^\s*(from\s+\S+\s+import\b|import\b|using\b|use\b|#\s*include\b|require\b|export\s*\{|.*=\s*require\()")
 DEF = [re.compile(p) for p in (
     r"^\s*(?:async\s+)?def\s+(\w+)",                                                        # python, ruby
     r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\*?\s+(\w+)",                   # js, ts, php
@@ -350,12 +350,12 @@ def analyze(spec, pr=None, base=None, head=None, run=False, specfile=None, label
     for (p, cs), (sym, ln) in list(hop1.items()) + list(hop2.items()):
         ci += 1
         hops = 1 if (p, cs) in hop1 else 2
-        via = sym if hops == 1 else hop1_of(sym, hop1)
+        root = sym if hops == 1 else hop1_of(sym, hop1)   # the changed symbol this chain starts from
         claim(id=f"K{ci}", short=f"{cs}() still correct", rule="R-CALL", tier="static", stage=3,
-              claim=f"{cs}() in {p} keeps behaving correctly after {via}() changed.",
+              claim=f"{cs}() in {p} keeps behaving correctly after {root}() changed.",
               origin=f"{cs}() mentions `{sym}` at {p}:{ln} (text match, {hops} hop{'s' if hops > 1 else ''} from the change)",
               plain=f"{cs}() uses code this change touches. It is a place to look, not a proven problem.",
-              formula=f"behaviour({cs}) preserved", label=UNKNOWN, chain=([via, cs] if hops == 1 else [via_root(via, hop1), via, cs]),
+              formula=f"behaviour({cs}) preserved", label=UNKNOWN, chain=([root, cs] if hops == 1 else [root, sym, cs]),
               note="no checker available: listed because it mentions the changed code. Add a --spec command to test it.")
 
     run_info = {"ran": False}
@@ -401,6 +401,7 @@ def analyze(spec, pr=None, base=None, head=None, run=False, specfile=None, label
           formula="intended(change)", label=UNKNOWN, note="a question of intent; code cannot decide it.")
 
     for c in C:
+        c["n_witnesses"] = len(c["witnesses"])
         c["command"] = f"python trust/generic/analyze.py {spec} " + (f"--pr {pr} " if pr else f"--base {base or ''} --head {head or ''} ") + f"--check {c['id']}"
 
     # ---- viewer data
@@ -498,12 +499,6 @@ def hop1_of(sym, hop1):
             return s
     return sym
 
-
-def via_root(via, hop1):
-    for (p, cs), (s, _) in hop1.items():
-        if cs == via:
-            return s
-    return via
 
 
 def main():

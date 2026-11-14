@@ -701,6 +701,29 @@ def s_proof(d: dict) -> str:
                           f"{esc(res.get('verdict'))}</span> "
                           f"<span>{esc(res.get('claim'))} via {esc(res.get('rule'))}</span></div>")
 
+    # claim hierarchy: the main task is decided by its sub-claims
+    hierarchy = proof.get("hierarchy") or {}
+    hier_html = ""
+    if hierarchy:
+        sub_ids = hierarchy.get("sub", [])
+        sub_verdicts = hierarchy.get("sub_verdicts", {})
+        main_verdict = hierarchy.get("main_verdict", "?")
+        main_cls = "bad" if main_verdict == "REFUTED" else "ok"
+        subs_html = ""
+        for sid in sub_ids:
+            v = sub_verdicts.get(sid, "?")
+            cls = {"REFUTED": "bad", "PROVED_IN_SCOPE": "ok",
+                   "TESTED": "mid", "UNKNOWN": "dim"}.get(v, "dim")
+            subs_html += (f"<div class='hsub'><span class='chip {cls}'>{esc(v)}</span> "
+                          f"<b>{esc(sid)}</b></div>")
+        hier_html = f"""
+        <div class="hierarchy">
+          <div class="hmain">main task
+            <span class="chip {main_cls}">{esc(main_verdict)}</span>
+            <span class="dim">{esc(hierarchy.get('rule', ''))}</span></div>
+          <div class="hsubs">{subs_html}</div>
+        </div>"""
+
     legend_rows = "".join(
         f"<tr><td><b>{esc(k)}</b></td><td class='dim'>{esc(v)}</td></tr>"
         for k, v in legend.items())
@@ -718,6 +741,7 @@ def s_proof(d: dict) -> str:
           <b>REQ-2297</b> - {esc(req.get('formal_obligation', ''))}
           <p class="dim">assumptions: {esc('; '.join(req.get('assumptions', [])))}</p>
         </div>
+        {hier_html}
         {details_html}
       </div>
     </div>
@@ -863,6 +887,10 @@ nav button:hover{border-color:#4d8ff0}
 .proofgrid .witness{color:#ff9d9d;font-weight:600}
 .vrow{padding:4px 0;border-bottom:1px dotted #253251;font-size:13px}
 .chip.dim{background:#2a2f42;color:#8b94ac}
+.hierarchy{background:#101a30;border:1px solid #253251;border-radius:10px;padding:10px 14px;margin:10px 0}
+.hmain{font-weight:600;margin-bottom:6px}
+.hsubs{display:flex;gap:10px;flex-wrap:wrap}
+.hsub{font-size:13px;background:#1c2740;border-radius:8px;padding:4px 10px}
 """
 
 _JS = r"""

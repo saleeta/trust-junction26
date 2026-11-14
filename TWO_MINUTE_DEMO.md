@@ -22,6 +22,21 @@ arbitrary-repository proof extraction is a proposed next step.
 The prior [animated slide deck](demo/concept-deck-slides.html) remains available
 as a fallback.
 
+The [visual-explainer source](demo/concept-deck.src.html) is the editable
+template. The **data is backend-driven**: regenerate the standalone HTML with
+
+```bash
+python trust/present/build_concept_deck.py   # reads toy/out/review.json
+```
+
+It injects the replay rows, per-step statuses, witnesses, breach arrows and
+the `~N tokens of evidence carried` caption line, and adds the
+**Replay only / Trust pipeline** toggle: unverified title replay (~21 tokens)
+vs the executed checker pipeline with agent context (~488 tokens, 10 claims,
+7 refuted). Every number comes from the toy review backend.
+
+The renderer comes from [nicobailon/visual-explainer](https://github.com/nicobailon/visual-explainer).
+
 Use the older [technical walkthrough](demo/presentation.html) for questions
 after the pitch. It is built from pipeline artifacts. If those artifacts are
 stale, rebuild the technical walkthrough first:

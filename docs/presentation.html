@@ -109,6 +109,10 @@ nav button:hover{border-color:#4d8ff0}
 .proofgrid .witness{color:#ff9d9d;font-weight:600}
 .vrow{padding:4px 0;border-bottom:1px dotted #253251;font-size:13px}
 .chip.dim{background:#2a2f42;color:#8b94ac}
+.hierarchy{background:#101a30;border:1px solid #253251;border-radius:10px;padding:10px 14px;margin:10px 0}
+.hmain{font-weight:600;margin-bottom:6px}
+.hsubs{display:flex;gap:10px;flex-wrap:wrap}
+.hsub{font-size:13px;background:#1c2740;border-radius:8px;padding:4px 10px}
 </style></head>
 <body>
 <div id="toast" class="toast"></div>
@@ -434,6 +438,13 @@ nav button:hover{border-color:#4d8ff0}
           <p class="dim">assumptions: supported target frameworks are those the shipped src/ projects list; the T4 templates are the source of the generated declarations; C# conditional compilation selects code by the framework symbols a build defines</p>
         </div>
         
+        <div class="hierarchy">
+          <div class="hmain">main task
+            <span class="chip bad">REFUTED</span>
+            <span class="dim">a main claim is REFUTED when any sub-claim is REFUTED; PROVED_IN_SCOPE only when every sub-claim is</span></div>
+          <div class="hsubs"><div class='hsub'><span class='chip bad'>REFUTED</span> <b>C-2297-1</b></div><div class='hsub'><span class='chip ok'>PROVED_IN_SCOPE</span> <b>C-2297-2</b></div><div class='hsub'><span class='chip bad'>REFUTED</span> <b>C-2297-3</b></div></div>
+        </div>
+        
         <div class="proofdetail" id="pd0" style="display:block">
           <p class="dim">changed line: <code>src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt:7</code></p>
           <div class="proofgrid">
@@ -574,7 +585,7 @@ nav button:hover{border-color:#4d8ff0}
     <h3>every verdict, honestly labelled</h3>
     <div class="split">
       <table class="mini"><tr><th>label</th><th>what it means</th></tr><tr><td><b>PROVED_IN_SCOPE</b></td><td class='dim'>a checker established a precisely stated property under listed assumptions</td></tr><tr><td><b>REFUTED</b></td><td class='dim'>the checker found a counterexample</td></tr><tr><td><b>TESTED</b></td><td class='dim'>executed examples passed; other cases may remain</td></tr><tr><td><b>UNKNOWN</b></td><td class='dim'>the property has not been checked or the checker could not decide</td></tr></table>
-      <div class="card"><h3>this review's ledger</h3><div class='vrow'><span class='chip bad'>REFUTED</span> <span>C-2297-1 via R-2297</span></div><div class='vrow'><span class='chip ok'>PROVED_IN_SCOPE</span> <span>C-2297-2 via R-sync</span></div><div class='vrow'><span class='chip bad'>REFUTED</span> <span>C-2297-3 via R-observability</span></div><div class='vrow'><span class='chip mid'>TESTED</span> <span>C-2297-2 via R-regression</span></div><div class='vrow'><span class='chip dim'>UNKNOWN</span> <span>C-2297-1 via R-unknown</span></div>
+      <div class="card"><h3>this review's ledger</h3><div class='vrow'><span class='chip bad'>REFUTED</span> <span>C-2297-1 via R-2297</span></div><div class='vrow'><span class='chip ok'>PROVED_IN_SCOPE</span> <span>C-2297-2 via R-sync</span></div><div class='vrow'><span class='chip bad'>REFUTED</span> <span>C-2297-3 via R-observability</span></div><div class='vrow'><span class='chip mid'>TESTED</span> <span>C-2297-2 via R-regression</span></div><div class='vrow'><span class='chip dim'>UNKNOWN</span> <span>C-2297-1 via R-unknown</span></div><div class='vrow'><span class='chip bad'>REFUTED</span> <span>C-2297-0 via R-hierarchy</span></div>
         <p class="dim">the human decision stays pending - the AI recommends
         request changes and refuses to waive the requirement.</p></div>
     </div></section><section class="slide" data-title="The hidden defect">

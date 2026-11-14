@@ -16,7 +16,7 @@
     ],
     [
       "4. Look deeper: who mentions it?",
-      "A text search finds <b>2</b> place(s) that mention the changed code and <b>2</b> that mention <i>those</i> (<span style='color:#e879f9'>pink</span>). These are listed to look at, not assumed broken."
+      "A text search finds <b>1</b> place(s) that mention the changed code and <b>1</b> that mention <i>those</i> (<span style='color:#e879f9'>pink</span>). These are listed to look at, not assumed broken."
     ],
     [
       "5. Labels",
@@ -77,29 +77,6 @@
     },
     {
       "id": "K1",
-      "short": "<module>() still correct",
-      "rule": "R-CALL",
-      "tier": "static",
-      "stage": 3,
-      "claim": "<module>() in shop/checkout.py keeps behaving correctly after final_price() changed.",
-      "origin": "<module>() mentions `final_price` at shop/checkout.py:1 (text match, 1 hop from the change)",
-      "plain": "<module>() uses code this change touches. It is a place to look, not a proven problem.",
-      "formula": "behaviour(<module>) preserved",
-      "label": "Unknown",
-      "chain": [
-        "final_price",
-        "<module>"
-      ],
-      "note": "no checker available: listed because it mentions the changed code. Add a --spec command to test it.",
-      "witnesses": [],
-      "assumptions": [],
-      "checked": 0,
-      "example": "",
-      "scope_note": "",
-      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K1"
-    },
-    {
-      "id": "K2",
       "short": "checkout() still correct",
       "rule": "R-CALL",
       "tier": "static",
@@ -119,34 +96,10 @@
       "checked": 0,
       "example": "",
       "scope_note": "",
-      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K2"
+      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K1"
     },
     {
-      "id": "K3",
-      "short": "<module>() still correct",
-      "rule": "R-CALL",
-      "tier": "static",
-      "stage": 3,
-      "claim": "<module>() in shop/ledger.py keeps behaving correctly after final_price() changed.",
-      "origin": "<module>() mentions `checkout` at shop/ledger.py:1 (text match, 2 hops from the change)",
-      "plain": "<module>() uses code this change touches. It is a place to look, not a proven problem.",
-      "formula": "behaviour(<module>) preserved",
-      "label": "Unknown",
-      "chain": [
-        "final_price",
-        "final_price",
-        "<module>"
-      ],
-      "note": "no checker available: listed because it mentions the changed code. Add a --spec command to test it.",
-      "witnesses": [],
-      "assumptions": [],
-      "checked": 0,
-      "example": "",
-      "scope_note": "",
-      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K3"
-    },
-    {
-      "id": "K4",
+      "id": "K2",
       "short": "post_sale() still correct",
       "rule": "R-CALL",
       "tier": "static",
@@ -167,7 +120,7 @@
       "checked": 0,
       "example": "",
       "scope_note": "",
-      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K4"
+      "command": "python trust/generic/analyze.py toy/_repo --base pr3 --head pr4 --check K2"
     },
     {
       "id": "U1",
@@ -310,25 +263,9 @@
       2
     ],
     [
-      "k:shop/checkout.py:<module>",
-      "<module>()",
-      "shop/checkout.py",
-      "code",
-      1,
-      3
-    ],
-    [
       "k:shop/checkout.py:checkout",
       "checkout()",
       "shop/checkout.py",
-      "code",
-      1,
-      3
-    ],
-    [
-      "k:shop/ledger.py:<module>",
-      "<module>()",
-      "shop/ledger.py",
       "code",
       1,
       3
@@ -359,7 +296,7 @@
     ],
     [
       "K1",
-      "K1 <module>() still correct",
+      "K1 checkout() still correct",
       "",
       "claim",
       2,
@@ -367,23 +304,7 @@
     ],
     [
       "K2",
-      "K2 checkout() still correct",
-      "",
-      "claim",
-      2,
-      3
-    ],
-    [
-      "K3",
-      "K3 <module>() still correct",
-      "",
-      "claim",
-      2,
-      3
-    ],
-    [
-      "K4",
-      "K4 post_sale() still correct",
+      "K2 post_sale() still correct",
       "",
       "claim",
       2,
@@ -425,22 +346,6 @@
       "VK2",
       "Unknown",
       "K2",
-      "ver",
-      3,
-      4
-    ],
-    [
-      "VK3",
-      "Unknown",
-      "K3",
-      "ver",
-      3,
-      4
-    ],
-    [
-      "VK4",
-      "Unknown",
-      "K4",
       "ver",
       3,
       4
@@ -516,18 +421,6 @@
       4
     ],
     [
-      "K3",
-      "VK3",
-      "verdict",
-      4
-    ],
-    [
-      "K4",
-      "VK4",
-      "verdict",
-      4
-    ],
-    [
       "U1",
       "VU1",
       "verdict",
@@ -553,19 +446,7 @@
     ],
     [
       "f:shop/prices.py",
-      "k:shop/checkout.py:<module>",
-      "calls",
-      3
-    ],
-    [
-      "f:shop/prices.py",
       "k:shop/checkout.py:checkout",
-      "calls",
-      3
-    ],
-    [
-      "k:shop/checkout.py:checkout",
-      "k:shop/ledger.py:<module>",
       "calls",
       3
     ],
@@ -576,26 +457,14 @@
       3
     ],
     [
-      "k:shop/checkout.py:<module>",
+      "k:shop/checkout.py:checkout",
       "K1",
       "claim",
       3
     ],
     [
-      "k:shop/checkout.py:checkout",
-      "K2",
-      "claim",
-      3
-    ],
-    [
-      "k:shop/ledger.py:<module>",
-      "K3",
-      "claim",
-      3
-    ],
-    [
       "k:shop/ledger.py:post_sale",
-      "K4",
+      "K2",
       "claim",
       3
     ]
