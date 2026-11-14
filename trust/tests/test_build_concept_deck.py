@@ -57,6 +57,16 @@ def test_comparison_uses_real_claim_counts():
     assert comparison["replay"]["checked"] == 0
 
 
+def test_entries_carry_drill_down_truths_from_claims():
+    entries, _ = bcd.build_entries(REVIEW)
+    t = entries[0]["truth"][0]
+    assert t["id"] == "A1" and t["label"] == "Refuted"
+    assert t["formula"] and t["command"].endswith("--check A1")
+    # the final row drills into the refuted main claims of the story
+    ids = [x["id"] for x in entries[3]["truth"]]
+    assert "A1" in ids and "B2" in ids
+
+
 def test_build_keeps_one_well_formed_script_block():
     template = ("<html><head><style>x{}</style></head><body>"
                 "<script>\nconst S='x',by=id=>id,svg=null;\nrender();\n</script>"
