@@ -1,0 +1,25 @@
+"""The stage deck keeps the technical story accurate and within two minutes."""
+
+import re
+import subprocess
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_timed_architecture_deck_and_published_copy():
+    source = (ROOT / "demo/architecture-presentation.html").read_text(encoding="utf-8")
+    published = (ROOT / "docs/architecture-presentation.html").read_text(encoding="utf-8")
+    assert source == published
+    durations = [int(n) for n in re.findall(r'data-duration="(\d+)"', source)]
+    assert len(durations) == 7 and sum(durations) == 120
+    for fact in ("Requirements", "Current code", "Agent context", "MongoDB Atlas",
+                 "Entire collaboration layer", "$graphLookup", "Scoped formal verification",
+                 "net472", "netstandard2.0", "Human decision", "Pending."):
+        assert fact.lower() in source.lower()
+    assert 'href="review-2297.html"' in source
+    script = ("new Function(require('fs').readFileSync(process.argv[1],'utf8')"
+              ".split('<script>')[1].split('</script>')[0])")
+    subprocess.run(["node", "-e", script, str(ROOT / "demo/architecture-presentation.html")],
+                   check=True, capture_output=True, text=True)

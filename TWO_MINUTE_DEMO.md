@@ -1,5 +1,20 @@
 # Two-minute stage presentation
 
+## Architecture presentation (recommended)
+
+Open [the animated architecture deck](demo/architecture-presentation.html).
+Press **Present 2:00** for the timed seven-scene run, or use arrow keys to
+advance at your own pace. **Notes** (or `N`) shows the narration for the current
+scene. The deck moves from the three data sources through graph structure,
+recorded traversal, scoped verification, the real #2297 counterexample,
+measured context cost, and a pending human decision. It keeps MongoDB Atlas
+as the optional evidence-tree backend and Entire as the collaboration layer.
+
+The [interactive review replay](demo/concept-deck.html) is the evidence view
+for questions after the timed presentation.
+
+## Interactive review replay
+
 Open the [visual review replay](demo/concept-deck.html) before the timer starts.
 The four supplied AI-made MessagePack branches are already loaded. Press the
 right arrow to reveal each patch, or **Replay changes** to reveal them on a
