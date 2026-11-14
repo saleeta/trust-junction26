@@ -1,19 +1,26 @@
 # Two-minute stage presentation
 
-Open the new [concept deck](demo/concept-deck.html) before the timer starts.
-It is a self-contained, five-slide HTML presentation. Arrow keys navigate;
-**N** shows speaker notes. Click the review-flow nodes, target frameworks,
-changed lines, and Entire capabilities to explain the idea visually.
-The #2297 evidence on slide 3 comes from the working review receipt;
-slide 4 is explicitly labelled as a proposed proof-carrying interface.
+Open the [belief replay](demo/concept-deck.html) before the timer starts.
+It is a single-canvas, self-contained HTML demo. Click **Play the example**,
+then advance through four simulated PR merges backed by local Git commits.
+Each interaction grows the belief map and updates the verdicts. Arrow keys
+also move between merges. Click any belief to inspect its source and evidence.
 
 | Time | Stage action and line |
 |---|---|
-| 0–15 s | Slide 1. “AI wrote the patch. Who checks the AI? We make every important review claim traceable to a check and a human decision.” |
-| 15–39 s | Slide 2. Click **Intent → Impact → Claims → Checks → Receipt → Human**. “This is the review contract. A model cannot silently turn missing evidence into approval.” |
-| 39–74 s | Slide 3. Click **net472**, then **netstandard2.0**. “The 237-file #2297 patch excludes two shipped targets from the attribute the issue requested for all generated code. Our compile probes show the attribute is available there.” |
-| 74–99 s | Slide 4. Click the `#if` line, then the attribute line. “This is the next step: each change links to a scoped claim and its proof, counterexample, test, or unknown status. We have a counterexample here, not a proof of the whole library.” |
-| 99–120 s | Slide 5. Click **Graph** and **Trail**. “Entire keeps the context and code map beside the receipt. The AI recommends changes; the named engineer owns the final decision. This one remains pending.” |
+| 0–15 s | Load the example. “Each merge gives the project new beliefs. We keep the source of each one.” |
+| 15–35 s | Advance PR #1 and #2. “A price must stay nonnegative; a VIP coupon promises 60% off. The graph grows with each promise.” |
+| 35–65 s | Advance PR #3; click the red belief and amber warning. “A checked basket is charged −100: that breaches the old price rule. Whether unrestricted discount stacking is intended remains a human question.” |
+| 65–100 s | Advance PR #4. “The AI caps each discount at 50%, yet the negative price survives, and VIP now gets only 50%. Green tests do not cover those cases.” |
+| 100–120 s | Point to the pending human decision; open the real #2297 receipt if needed. “The reviewer brings counterexamples and uncertainty to a human. It does not approve its own patch.” |
+
+The repository field accepts a **public GitHub URL** and loads recent merged
+PR metadata. In that mode, titles remain unverified candidate beliefs and
+produce warnings only. The checked conflict story is the local toy example;
+arbitrary-repository proof extraction is a proposed next step.
+
+The prior [animated slide deck](demo/concept-deck-slides.html) remains available
+as a fallback.
 
 Use the older [technical walkthrough](demo/presentation.html) for questions
 after the pitch. It is built from pipeline artifacts. If those artifacts are
@@ -24,6 +31,8 @@ python present.py            # runs the pipeline if needed, then builds the deck
 ```
 
 Keep [DEMO.md](DEMO.md) for questions; do not run the seven-beat pipeline on stage.
+
+## Earlier evidence-card walkthrough (backup)
 
 | Time | Screen and narration |
 |---|---|
