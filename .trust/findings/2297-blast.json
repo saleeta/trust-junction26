@@ -1,0 +1,359 @@
+[
+  {
+    "assumption": {
+      "id": "tfm-guard-0",
+      "cls": "tfm-guard",
+      "statement": "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage is unavailable on net472, netstandard2.0, and excluding them is acceptable",
+      "source_kind": "implicit_in_code",
+      "source_ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs  #if !NETSTANDARD2_0 && !NETFRAMEWORK",
+      "check_cmd": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
+      "verdict": "FALSIFIED",
+      "evidence": [
+        "'#if !NETSTANDARD2_0 && !NETFRAMEWORK' did NOT exist at 32258fdbe - introduced by this change",
+        "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles unguarded on net472, netstandard2.0 - the premise is false",
+        "the originating issue does not mention target frameworks - the conditionality was not requested"
+      ],
+      "reconstructed": false
+    },
+    "sites": [
+      {
+        "kind": "target_framework",
+        "ref": "net472",
+        "why": "shipped by the library but excluded by the guard",
+        "count": 1
+      },
+      {
+        "kind": "target_framework",
+        "ref": "netstandard2.0",
+        "why": "shipped by the library but excluded by the guard",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "template",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+        "why": "emits the guarded code into consumers",
+        "count": 1
+      },
+      {
+        "kind": "snapshot",
+        "ref": "220 verified snapshots",
+        "why": "regenerated WITH the guard, so the tests now assert the guarded output is correct",
+        "count": 220
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "tfm-guard-0-h-tfm-net472",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "feature_absent_on_target",
+        "rationale": "the guard removes System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage for net472, which the library ships; the issue asked for it unconditionally",
+        "site": "net472",
+        "strategy": "differential",
+        "priority": 3.0,
+        "expected_observation": "code generated for net472 contains no System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tfm-netstandard2.0",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "feature_absent_on_target",
+        "rationale": "the guard removes System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage for netstandard2.0, which the library ships; the issue asked for it unconditionally",
+        "site": "netstandard2.0",
+        "strategy": "differential",
+        "priority": 3.0,
+        "expected_observation": "code generated for netstandard2.0 contains no System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-snapshot",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "test_codifies_the_gap",
+        "rationale": "the verified snapshots were regenerated with the guard, so snapshot tests assert the narrowed output is correct and can never fail on it",
+        "site": "220 verified snapshots",
+        "strategy": "static",
+        "priority": 2.5,
+        "expected_observation": "removing the guard makes snapshot tests fail, proving they pin the gap",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-CompositeResolverTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-EnumTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-FormatterTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-ResolverTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-StringKeyFormatterTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      },
+      {
+        "id": "tfm-guard-0-h-tmpl-UnionTemplate.tt",
+        "assumption_id": "tfm-guard-0",
+        "failure_mode": "regeneration_drift",
+        "rationale": "a future regeneration propagates the guard to every consumer of this template",
+        "site": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+        "strategy": "static",
+        "priority": 1.0,
+        "expected_observation": "regenerated output still carries the guard",
+        "status": "untested"
+      }
+    ],
+    "severity": "moderate",
+    "test_invisible": true
+  },
+  {
+    "assumption": {
+      "id": "documented-claim-0",
+      "cls": "documented-claim",
+      "statement": "documentation asserts: \"The attribute is only emitted for targets where it is available (not `netstandard2.0` or .NET Framework).\"",
+      "source_kind": "stated",
+      "source_ref": "README.md (added by this change)",
+      "check_cmd": "dotnet build \"D:\\work\\big-hackathon\\.trust\\probes\\origin_ju26-issue-2297\\probe_net472\\p.csproj\" -v q --nologo",
+      "verdict": "FALSIFIED",
+      "evidence": [
+        "the sentence was ADDED to README.md by this change",
+        "System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage compiles on net472, netstandard2.0, so the documented availability constraint is factually wrong",
+        "no test reads documentation, so this claim cannot be caught by the suite"
+      ],
+      "reconstructed": false
+    },
+    "sites": [
+      {
+        "kind": "documentation",
+        "ref": "README.md",
+        "why": "ships a factually false statement to readers",
+        "count": 1
+      },
+      {
+        "kind": "target_framework",
+        "ref": "net472",
+        "why": "named in the false claim",
+        "count": 1
+      },
+      {
+        "kind": "target_framework",
+        "ref": "netstandard2.0",
+        "why": "named in the false claim",
+        "count": 1
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "documented-claim-0-h-doc",
+        "assumption_id": "documented-claim-0",
+        "failure_mode": "false_documented_constraint",
+        "rationale": "the change documents an availability limit that does not exist, which will be read as justification for the feature gap and repeated by maintainers",
+        "site": "README.md",
+        "strategy": "static",
+        "priority": 3.5,
+        "expected_observation": "the named API compiles on the frameworks the sentence excludes",
+        "status": "untested"
+      }
+    ],
+    "severity": "moderate",
+    "test_invisible": true
+  },
+  {
+    "assumption": {
+      "id": "test-observability-0",
+      "cls": "test-observability",
+      "statement": "the existing test suite can observe this change",
+      "source_kind": "derived",
+      "source_ref": "change is conditional on ['net472', 'netstandard2.0']",
+      "check_cmd": "intersect excluded frameworks with test project TFMs",
+      "verdict": "FALSIFIED",
+      "evidence": [
+        "no test project targets ['net472', 'netstandard2.0']; tests cover ['net8.0']. A green suite is evidence about one configuration only."
+      ],
+      "reconstructed": false
+    },
+    "sites": [
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/CompositeResolverTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/EnumTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/FormatterTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/ResolverTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/StringKey/StringKeyFormatterTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/TransformUtilities.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.cs",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      },
+      {
+        "kind": "file",
+        "ref": "src/MessagePack.SourceGenerator/Transforms/UnionTemplate.tt",
+        "why": "changed source under an untested configuration",
+        "count": 1
+      }
+    ],
+    "hypotheses": [
+      {
+        "id": "test-observability-0-h-suite",
+        "assumption_id": "test-observability-0",
+        "failure_mode": "green_suite_proves_nothing",
+        "rationale": "13 changed source file(s) are only exercised under configurations the suite does not build",
+        "site": "13 files under src/",
+        "strategy": "differential",
+        "priority": 2.0,
+        "expected_observation": "building the excluded configuration reveals behaviour the suite never checks",
+        "status": "untested"
+      }
+    ],
+    "severity": "low",
+    "test_invisible": false
+  },
+  {
+    "assumption": {
+      "id": "generated-in-sync-0",
+      "cls": "generated-in-sync",
+      "statement": "every checked-in generated .cs is the current output of the .tt template beside it",
+      "source_kind": "implicit_in_code",
+      "source_ref": "17 template/output pairs",
+      "check_cmd": "compare which half of each pair the diff touched",
+      "verdict": "SUPPORTED",
+      "evidence": [
+        "all 6 touched pair(s) changed on both sides"
+      ],
+      "reconstructed": false
+    },
+    "sites": [],
+    "hypotheses": [],
+    "severity": "none",
+    "test_invisible": false
+  }
+]
