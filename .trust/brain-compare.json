@@ -1,0 +1,130 @@
+{
+  "base": "2ce72aa",
+  "head": "7b5c893",
+  "arm_a": [
+    {
+      "id": "G1",
+      "short": "tests mention what changed",
+      "rule": "R-STATIC",
+      "tier": "static",
+      "stage": 1,
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "origin": "derived from the diff",
+      "plain": "Does anything in the test suite mention the changed code?",
+      "formula": "∀ s ∈ CHANGED_SYMBOLS. a test file mentions s",
+      "label": "Unknown",
+      "note": "no changed symbol could be extracted by pattern (config/data/doc files, or an unfamiliar syntax)",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "n_witnesses": 0,
+      "command": "python trust/generic/analyze.py D:\\work\\big-hackathon\\foobar --base 2ce72aa --head 7b5c893 --check G1"
+    },
+    {
+      "id": "U1",
+      "short": "the change is what was intended",
+      "rule": "R-HUMAN",
+      "tier": "human",
+      "stage": 2,
+      "claim": "This change does what its author and the requirement intended.",
+      "origin": "PR title: \"simplify ship(): remove redundant paid check (AI patch)\"",
+      "plain": "Whether the change matches the intent behind it is a human judgement.",
+      "formula": "intended(change)",
+      "label": "Unknown",
+      "note": "a question of intent; code cannot decide it.",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "n_witnesses": 0,
+      "command": "python trust/generic/analyze.py D:\\work\\big-hackathon\\foobar --base 2ce72aa --head 7b5c893 --check U1"
+    },
+    {
+      "id": "P1",
+      "claim": "Promise P-1 holds: an order never ships without payment.",
+      "rule": "R-RUN",
+      "label": "Unknown",
+      "witnesses": [],
+      "note": "the promise is in the README; arm A never executes it"
+    }
+  ],
+  "arm_b": [
+    {
+      "id": "G1",
+      "short": "tests mention what changed",
+      "rule": "R-STATIC",
+      "tier": "static",
+      "stage": 1,
+      "claim": "Every symbol this change touches is mentioned by at least one test file.",
+      "origin": "derived from the diff",
+      "plain": "Does anything in the test suite mention the changed code?",
+      "formula": "∀ s ∈ CHANGED_SYMBOLS. a test file mentions s",
+      "label": "Unknown",
+      "note": "no changed symbol could be extracted by pattern (config/data/doc files, or an unfamiliar syntax)",
+      "witnesses": [],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "n_witnesses": 0,
+      "command": "python trust/generic/analyze.py D:\\work\\big-hackathon\\foobar --base 2ce72aa --head 7b5c893 --check G1"
+    },
+    {
+      "id": "U1",
+      "short": "the change is what was intended",
+      "rule": "R-HUMAN",
+      "tier": "human",
+      "stage": 2,
+      "claim": "This change does what its author and the requirement intended.",
+      "origin": "PR title: \"simplify ship(): remove redundant paid check (AI patch)\"",
+      "plain": "Whether the change matches the intent behind it is a human judgement.",
+      "formula": "intended(change)",
+      "label": "Refuted",
+      "note": "the agent's own words show it intended to remove the guard that promise P-1 depends on",
+      "witnesses": [
+        "session: \"The ... guard looks redundant ... drop the guard entirely\"",
+        "session never mentions P-1: \"an order never ships without payment\""
+      ],
+      "assumptions": [],
+      "checked": 0,
+      "chain": [],
+      "example": "",
+      "scope_note": "",
+      "n_witnesses": 0,
+      "command": "python trust/generic/analyze.py D:\\work\\big-hackathon\\foobar --base 2ce72aa --head 7b5c893 --check U1",
+      "via_session": true
+    },
+    {
+      "id": "P1",
+      "claim": "Promise P-1 holds: an order never ships without payment.",
+      "rule": "R-RUN",
+      "label": "Refuted",
+      "witnesses": [
+        "executed at the patch commit: ship(\"o2\") on an unpaid order -> 'shipped'"
+      ],
+      "note": "the patch ships an unpaid order - the promise is broken",
+      "via_session": false
+    },
+    {
+      "id": "B1",
+      "claim": "The agent claims its verification (tests are green) covers promise P-1.",
+      "rule": "R-HUMAN",
+      "label": "Refuted",
+      "via_session": true,
+      "witnesses": [
+        "session: \"Tests are green. Committing the simplification.\"",
+        "executed at the patch commit: unittest discover -> FAILED (failures=1)",
+        "session: the agent never mentions P-1 or an unpaid order"
+      ],
+      "note": "green tests were treated as proof of a promise they never exercised"
+    }
+  ],
+  "session_tokens": 335,
+  "trail": "https://entire.com/et/earned-trust-review/-/trails/3"
+}

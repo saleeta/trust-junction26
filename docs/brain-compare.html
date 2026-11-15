@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brain compare - the AI patch reviewed with and without the agent context</title>
+<style>
+:root{--paper:#f6f4ef;--ink:#1d2333;--muted:#68707f;--line:#d3d7dc;--accent:#6d4a9e;--red:#b0413e;--amber:#9a6a1f;--green:#2f7d5d}
+body{margin:0;background:#e9e7e1;color:var(--ink);font-family:Arial,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:34px 24px 60px}
+h1{font:normal clamp(30px,4vw,50px)/1.05 Georgia,serif;margin:6px 0}
+.lead{color:#4a5468;font-size:17px;max-width:900px}
+.banner{background:#f8e8e5;border:1px solid var(--red);border-radius:10px;padding:14px 18px;margin:16px 0}
+.banner b{color:var(--red)}
+table{width:100%;border-collapse:collapse;background:#fffdf9;border:1px solid var(--line);margin-top:14px}
+th{font:700 12px Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:#f0ede6}
+td{vertical-align:top;padding:12px;border-bottom:1px solid var(--line);font-size:14px}
+.v{font-weight:700;white-space:nowrap}
+.v.ok{color:var(--green)} .v.bad{color:var(--red)} .v.mid{color:var(--amber)} .v.dim{color:var(--muted)}
+.tok{display:flex;gap:10px;align-items:center;margin:14px 0}
+.tok .bar{height:12px;border-radius:6px}
+.tok .a{background:#c9cdd6} .tok .b{background:var(--accent)}
+.dim{color:var(--muted);font-size:12.5px}
+a{color:var(--accent)}
+</style></head><body><main>
+<h1>Brain compare - with and without the agent context</h1>
+<p class="lead">One AI patch in the foobar repo, reviewed twice. <b>Arm A</b> uses
+code and Git only - the methodology. <b>Arm B</b> adds the agent's captured
+session from the Entire Trail (committed on the branch). The context does not
+replace the checkers; it resolves the claims that depend on <i>intent</i>.</p>
+<div class="banner"><b>Honesty:</b> the session is OUR labelled re-enactment -
+a real third-party repository rarely ships its agent transcript. The compare
+demonstrates what the Brain adds when a session exists, and what stays honest
+when it does not.</div>
+<table>
+<tr><th>claim</th><th>arm A · methodology only</th><th>arm B · + agent context</th><th>what the session changed</th></tr>
+
+        <tr>
+          <td><b>G1</b><br><span class="dim">Every symbol this change touches is mentioned by at least one test file.</span></td>
+          <td class="v dim">Unknown</td>
+          <td class="v dim">Unknown</td>
+          <td class="dim">unchanged</td>
+        </tr>
+        <tr>
+          <td><b>U1</b><br><span class="dim">This change does what its author and the requirement intended.</span><div class='dim'>witness: session: "The ... guard looks redundant ... drop the guard entirely"…</div></td>
+          <td class="v dim">Unknown</td>
+          <td class="v bad">Refuted</td>
+          <td class="dim">resolved by session</td>
+        </tr>
+        <tr>
+          <td><b>P1</b><br><span class="dim">Promise P-1 holds: an order never ships without payment.</span><div class='dim'>witness: executed at the patch commit: ship("o2") on an unpaid order -> 'shipped'…</div></td>
+          <td class="v dim">Unknown</td>
+          <td class="v bad">Refuted</td>
+          <td class="dim">resolved by execution</td>
+        </tr>
+        <tr>
+          <td><b>B1</b><br><span class="dim">The agent claims its verification (tests are green) covers promise P-1.</span><div class='dim'>witness: session: "Tests are green. Committing the simplification."…</div></td>
+          <td class="v dim">—</td>
+          <td class="v bad">Refuted</td>
+          <td class="dim">new from session</td>
+        </tr>
+</table>
+<div class="tok">
+  <span class="dim">arm A pipeline ~401 tok</span>
+  <span class="bar a" style="width:130px"></span>
+  <span class="dim">+ session ~335 tok</span>
+  <span class="bar b" style="width:240px"></span>
+  <span class="dim">= arm B ~736 tok</span>
+</div>
+<p class="dim">Reproduce: <code>python trust/brain/compare.py</code> · repo:
+<code>foobar/</code> base 2ce72aa → head 7b5c893 · agent context on
+<a href="https://entire.com/et/earned-trust-review/-/trails/3" target="_blank">Entire Trail #3</a>.
+The corrected human-approved fix is commit <code>fixed</code> on the same branch.</p>
+</main></body></html>
