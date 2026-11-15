@@ -21,8 +21,8 @@ def test_timed_architecture_deck_and_published_copy():
                  "Human decision", "Revocable",
                  "Five PRs", "review-all-prs.html", "12.7k", "36.6k",
                  "basic AI: whole diff",
-                 "not add-ons", "context + ledger", "foobar", "Trail #3",
-                 "brain-compare.html", "audit ledger"):
+                 "context + ledger", "foobar", "Trail #3",
+                 "brain-compare.html", "audit ledger", "we have no evidence"):
         assert fact.lower() in source.lower()
     assert 'href="review-2297.html"' in source
     assert 'href="claim-tableau.html"' in source

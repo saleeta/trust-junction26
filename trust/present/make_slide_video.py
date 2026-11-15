@@ -62,10 +62,12 @@ SCRIPT = [
     "Grey: how much text a basic AI must read — up to thirty-six thousand tokens. Purple: what "
     "our review actually needed — four hundred.",
 
-    "And none of this floats in the air. The Entire Trail carries the agent context with the "
-    "change — and the brain compare proves why that matters: with the session, the agent's own "
-    "words refute its intent. MongoDB keeps the audit ledger — every visit, every token, "
-    "re-walkable by anyone. They are not add-ons. They are essential parts.",
+    "One last thing: where does all this live? The agent context travels with the change on the "
+    "Entire Trail — the session that records what the AI was thinking. Without it, the review "
+    "honestly says: intent, Unknown — meaning, we have no evidence. With the session, the "
+    "agent's own words are the evidence, so that Unknown is resolved — turned into Refuted, "
+    "meaning, we found a counterexample. And MongoDB keeps the audit ledger: every step of the "
+    "review, and what it cost — so anyone can re-walk it.",
 
     "Finally — who decides? The AI finds the problem, but it is never allowed to approve its "
     "own work. It hands a person the evidence, and the person decides. In our repo, a named "

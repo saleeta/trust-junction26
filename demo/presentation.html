@@ -497,13 +497,14 @@ table.score td{padding:8px 12px;border-bottom:1px solid #1a2340;font-size:13px;v
     </table>
     <p class="dim">full table: <a href="review-all-prs.html" target="_blank">
     review-all-prs.html</a> · re-run: python trust/generic/review_prs.py</p></section><section class="slide" data-title="Context + ledger: Entire &amp; MongoDB">
-    <h2>Context + ledger: Entire and MongoDB are not add-ons</h2>
+    <h2>Context + ledger: where the context and the audit live</h2>
     <div class="split">
       <div class="card">
         <h3>the foobar brain compare</h3>
         <p>One AI patch, reviewed twice. Without the agent context, intent is
-        Unknown. With the session from the Entire Trail, the agent's own words
-        resolve it - and the executed check still refutes the promise.</p>
+        Unknown - no evidence. With the session from the Entire Trail, the
+        agent's own words resolve it to Refuted - a counterexample was found -
+        and the executed check still refutes the promise.</p>
         <div class='vrow'><b>G1</b> <span class='chip dim'>Unknown</span> → <span class='chip bad'>Unknown</span> <span class='dim'>unchanged</span></div><div class='vrow'><b>U1</b> <span class='chip dim'>Unknown</span> → <span class='chip bad'>Refuted</span> <span class='dim'>resolved by session</span></div><div class='vrow'><b>P1</b> <span class='chip dim'>Unknown</span> → <span class='chip bad'>Refuted</span> <span class='dim'>resolved by execution</span></div><div class='vrow'><b>B1</b> <span class='chip dim'>—</span> → <span class='chip bad'>Refuted</span> <span class='dim'>new from session</span></div>
         <p><a href="brain-compare.html" target="_blank">brain-compare.html ↗</a></p>
       </div>

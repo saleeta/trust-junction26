@@ -800,13 +800,14 @@ def s_context_ledger(d: dict) -> str:
                      f"<span class='chip bad'>{esc(bl)}</span> "
                      f"<span class='dim'>{esc(note)}</span></div>")
     return f"""
-    <h2>Context + ledger: Entire and MongoDB are not add-ons</h2>
+    <h2>Context + ledger: where the context and the audit live</h2>
     <div class="split">
       <div class="card">
         <h3>the foobar brain compare</h3>
         <p>One AI patch, reviewed twice. Without the agent context, intent is
-        Unknown. With the session from the Entire Trail, the agent's own words
-        resolve it - and the executed check still refutes the promise.</p>
+        Unknown - no evidence. With the session from the Entire Trail, the
+        agent's own words resolve it to Refuted - a counterexample was found -
+        and the executed check still refutes the promise.</p>
         {rows or '<p class="dim">run python trust/brain/compare.py first</p>'}
         <p><a href="brain-compare.html" target="_blank">brain-compare.html ↗</a></p>
       </div>
