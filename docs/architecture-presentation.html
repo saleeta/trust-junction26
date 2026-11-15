@@ -47,71 +47,70 @@
 </head>
 <body><div class="app"><main class="stage" aria-label="Earned Trust animated talk">
 
-<section class="slide active" data-duration="12" data-note="Here's a simple example. An AI made average() shorter by deleting its empty-list check. The tests stayed green, because none used an empty list. So average of an empty list now crashes.">
-  <p class="eyebrow">01 / THE PROBLEM · A SIMPLE EXAMPLE</p><h1>The tests passed. The code still broke.</h1><p class="sub">An AI was asked to make <b>average()</b> shorter. Every test stayed green - because no test ever tried an empty list.</p>
-  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="The promise, the AI's change and the green tests, leading to a divide-by-zero crash on an empty list">
-    <g class="reveal"><rect x="20" y="20" width="360" height="190" rx="12" class="node-blue"/><text x="44" y="66" class="svg-strong">The promise</text><text x="44" y="112" class="svg-small">average([]) returns 0.</text><text x="44" y="142" class="svg-small">It never crashes.</text></g>
-    <g class="reveal delay1"><rect x="420" y="20" width="360" height="190" rx="12" class="node"/><text x="444" y="66" class="svg-strong">The AI's change</text><text x="444" y="114" class="svg-mono" style="fill:var(--red);font-weight:700;text-decoration:line-through">if not nums: return 0</text><text x="444" y="148" class="svg-small">deleted - “looked unneeded”</text><text x="444" y="180" class="svg-small">Shorter. Looks clean.</text></g>
-    <g class="reveal delay2"><rect x="820" y="20" width="360" height="190" rx="12" class="node-green"/><text x="844" y="66" class="svg-strong">Tests: all green ✓</text><text x="844" y="112" class="svg-small">But they only use lists</text><text x="844" y="142" class="svg-small">with numbers in them.</text></g>
-    <g class="reveal delay3"><path d="M600 210 V275" class="edge-hot"/><rect x="200" y="275" width="800" height="170" rx="12" class="node-red"/><text x="600" y="340" text-anchor="middle" class="svg-strong">Someone calls average([]) → ZeroDivisionError</text><text x="600" y="390" text-anchor="middle" class="svg-small">The promise is broken, and nothing warned anyone.</text></g>
-  </svg><div class="foot"><span>A simple made-up example to explain the idea. Slides 8 and 9 show real results from this project.</span><span>12 s</span></div>
+<section class="slide active" data-duration="12" data-note="Here's a logic bug. The refund policy says recent purchase OR defective item. An AI changes OR to AND. Tests for both conditions and neither condition still pass. But a defective item bought 45 days ago is wrongly denied. No crash, just the wrong decision.">
+  <p class="eyebrow">01 / THE PROBLEM · A LOGIC EDGE CASE</p><h1>The tests passed. The decision was wrong.</h1><p class="sub">Policy: refund a <b>recent purchase OR a defective item</b>. An AI changed <code>or</code> to <code>and</code>.</p>
+  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Refund policy says recent or defective; AI code requires both; tests cover only both and neither; a defective older item is wrongly denied">
+    <g class="reveal"><rect x="20" y="20" width="360" height="190" rx="12" class="node-blue"/><text x="44" y="66" class="svg-strong">The policy</text><text x="44" y="112" class="svg-small">Recent purchase OR</text><text x="44" y="142" class="svg-small">defective item → refund</text></g>
+    <g class="reveal delay1"><rect x="420" y="20" width="360" height="190" rx="12" class="node"/><text x="444" y="66" class="svg-strong">The AI's change</text><text x="444" y="114" class="svg-mono" style="fill:var(--red);font-weight:700">recent AND defective</text><text x="444" y="148" class="svg-small">One word changed.</text><text x="444" y="180" class="svg-small">The code still runs.</text></g>
+    <g class="reveal delay2"><rect x="820" y="20" width="360" height="190" rx="12" class="node-green"/><text x="844" y="66" class="svg-strong">Tests: all green ✓</text><text x="844" y="112" class="svg-small">They cover both true</text><text x="844" y="142" class="svg-small">and both false only.</text></g>
+    <g class="reveal delay3"><path d="M600 210 V275" class="edge-hot"/><rect x="200" y="275" width="800" height="170" rx="12" class="node-red"/><text x="600" y="340" text-anchor="middle" class="svg-strong">Defective, 45 days old → wrongly denied</text><text x="600" y="390" text-anchor="middle" class="svg-small">Expected: refund · Actual: no refund · No exception raised</text></g>
+  </svg><div class="foot"><span>Illustrative example. Slides 8 and 9 show real results from this project.</span><span>12 s</span></div>
 </section>
 
-<section class="slide" data-duration="15" data-note="A normal AI review says: shorter, tests pass, approve. It never tried an empty list. We do it differently. Write down the promise. Actually run average of an empty list. Look. It crashes. That's proof, and anyone can repeat it.">
+<section class="slide" data-duration="15" data-note="A normal AI review sees valid code and green tests. It may approve. Our review writes down the policy as a claim and checks the missing combination: old but defective. The code returns no refund, while the policy requires a refund. Anyone can reproduce that mismatch.">
   <p class="eyebrow">02 / THE IDEA</p><h1>Don't take the AI's word. Make it show proof.</h1><p class="sub">Same change, two reviews. One gives an opinion. The other runs a test that anyone can repeat.</p>
   <div class="split">
     <div class="compare dark reveal"><h2>A normal AI review</h2>
-      <div class="bubble">“I reviewed the change to <code>average()</code>. The code is shorter and all tests pass. <b>✓ Approve.</b>”</div>
-      <div class="missed"><b>What it missed:</b> it never tried an empty list - so it never saw the crash.</div>
+      <div class="bubble">“The code runs, and every test passes. <b>✓ Approve.</b>”</div>
+      <div class="missed"><b>What it missed:</b> the tests never tried exactly one condition being true.</div>
       <div class="mini">Sounds sure. Shows nothing you can check.</div></div>
     <div class="compare reveal delay1"><h2>Our review</h2>
       <ol class="steps">
-        <li class="reveal delay2"><span class="num">1</span><div><b>Write down the promise</b><span>average() must never crash - even for an empty list.</span></div></li>
-        <li class="reveal delay3"><span class="num">2</span><div><b>Actually run it</b><code>average([])</code></div></li>
-        <li class="reveal delay4 bad"><span class="num">3</span><div><b>See what happened</b><span>ZeroDivisionError → <b class="red">BROKEN</b>, with the proof attached.</span></div></li>
+        <li class="reveal delay2"><span class="num">1</span><div><b>Write down the rule</b><span>Recent OR defective must qualify.</span></div></li>
+        <li class="reveal delay3"><span class="num">2</span><div><b>Try the missing case</b><code>refund_ok(False, True)</code></div></li>
+        <li class="reveal delay4 bad"><span class="num">3</span><div><b>Compare the answers</b><span>Expected True, got False → <b class="red">REFUTED</b>.</span></div></li>
       </ol>
-      <div class="mini">Anyone can run that one line and see the same crash.</div></div>
+      <div class="mini">Anyone can run that case and see the mismatch.</div></div>
   </div>
   <div class="foot"><span>An opinion can be wrong without anyone noticing. A test shows you.</span><span>15 s</span></div>
 </section>
 
-<section class="slide" data-duration="12" data-note="Step one: gather three things. The promise, the change, and the AI's reason from its Entire chat log. Alone, each looks fine. Together, you see the promise needs the line the AI deleted.">
-  <p class="eyebrow">03 / STEP 1 · GATHER EVIDENCE</p><h1>Step 1: gather the evidence.</h1><p class="sub">What was promised, what the AI changed, and why it did it - from the AI's own chat log. Then we put them side by side.</p>
-  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="README promise, the deleted empty-list check, and the AI chat log feed one review map that shows the promise needs the deleted line">
+<section class="slide" data-duration="12" data-note="Step one: gather the policy, the changed line, and the agent's explanation if Entire saved it. The policy says OR. The diff says AND. The session tells us why the agent made that change; if absent, we mark its intent unknown.">
+  <p class="eyebrow">03 / STEP 1 · GATHER EVIDENCE</p><h1>Step 1: gather the evidence.</h1><p class="sub">What was promised, what changed, and what the agent said, if its session was saved. Then put them side by side.</p>
+  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Refund policy, the AI's changed Boolean operator, and the illustrative agent session feed one review map showing their conflict">
     <path d="M185 210 C185 245 420 240 420 275 M600 210 V275 M1015 210 C1015 245 780 240 780 275" class="edge-hot route r1"/>
-    <g class="reveal"><rect x="0" y="10" width="370" height="200" rx="12" class="node-blue"/><text x="22" y="54" class="svg-strong">What was promised</text><text x="22" y="96" class="svg-small">README:</text><text x="22" y="126" class="svg-small">“average([]) returns 0.</text><text x="22" y="156" class="svg-small">It never crashes.”</text></g>
-    <g class="reveal delay1"><rect x="415" y="10" width="370" height="200" rx="12" class="node"/><text x="437" y="54" class="svg-strong">What the AI changed</text><text x="437" y="98" class="svg-mono" style="fill:var(--red);font-weight:700">− if not nums: return 0</text><text x="437" y="132" class="svg-mono" xml:space="preserve" style="fill:var(--ink)">  return sum(nums)</text><text x="437" y="162" class="svg-mono" xml:space="preserve" style="fill:var(--ink)">      / len(nums)</text><text x="437" y="192" class="svg-small" style="font-size:18px">red line = deleted</text></g>
-    <g class="reveal delay2"><rect x="830" y="10" width="370" height="200" rx="12" class="node-amber"/><text x="852" y="54" class="svg-strong">Why (AI chat log)</text><text x="852" y="96" class="svg-small">You: “Make average()</text><text x="852" y="124" class="svg-small">shorter.”</text><text x="852" y="158" class="svg-small">AI: “Removed the empty-</text><text x="852" y="186" class="svg-small">list check. Unneeded.”</text></g>
-    <g class="reveal delay3"><rect x="330" y="275" width="540" height="120" rx="14" fill="var(--white)" stroke="var(--teal)" stroke-width="3"/><text x="600" y="316" text-anchor="middle" class="svg-strong">Review map</text><text x="600" y="352" text-anchor="middle" class="svg-small">Promise: average() never crashes</text><text x="600" y="382" text-anchor="middle" class="svg-small" style="fill:var(--red);font-weight:700">← it needs the line the AI deleted</text></g>
-    <g class="reveal delay4"><text x="600" y="448" text-anchor="middle" class="svg-strong">Alone, each looks fine. Side by side, the bug jumps out.</text></g>
-  </svg><div class="foot"><span>The map can be stored in MongoDB Atlas. No chat log saved? That card says “unknown” instead of guessing.</span><span>12 s</span></div>
+    <g class="reveal"><rect x="0" y="10" width="370" height="200" rx="12" class="node-blue"/><text x="22" y="54" class="svg-strong">What was promised</text><text x="22" y="96" class="svg-small">Refund policy:</text><text x="22" y="126" class="svg-small">“Recent purchase OR</text><text x="22" y="156" class="svg-small">defective item.”</text></g>
+    <g class="reveal delay1"><rect x="415" y="10" width="370" height="200" rx="12" class="node"/><text x="437" y="54" class="svg-strong">What the AI changed</text><text x="437" y="98" class="svg-mono" style="fill:var(--green)">− recent or defective</text><text x="437" y="132" class="svg-mono" style="fill:var(--red);font-weight:700">+ recent and defective</text><text x="437" y="180" class="svg-small">one operator, new behavior</text></g>
+    <g class="reveal delay2"><rect x="830" y="10" width="370" height="200" rx="12" class="node-amber"/><text x="852" y="54" class="svg-strong">Why (Entire session)</text><text x="852" y="96" class="svg-small">Illustrative agent note:</text><text x="852" y="130" class="svg-small">“Combined the two</text><text x="852" y="158" class="svg-small">refund conditions.”</text><text x="852" y="190" class="svg-small">No log? Intent = unknown.</text></g>
+    <g class="reveal delay3"><rect x="330" y="275" width="540" height="120" rx="14" fill="var(--white)" stroke="var(--teal)" stroke-width="3"/><text x="600" y="316" text-anchor="middle" class="svg-strong">Review map</text><text x="600" y="352" text-anchor="middle" class="svg-small">Policy: either condition qualifies</text><text x="600" y="382" text-anchor="middle" class="svg-small" style="fill:var(--red);font-weight:700">Code: both conditions required</text></g>
+    <g class="reveal delay4"><text x="600" y="448" text-anchor="middle" class="svg-strong">The sources disagree. Now find a counterexample.</text></g>
+  </svg><div class="foot"><span>MongoDB stores the links. Missing Entire session? Intent stays unknown.</span><span>12 s</span></div>
 </section>
 
-<section class="slide" data-duration="11" data-note="Step two: make the promise checkable. &quot;Never crashes&quot; becomes: for every list, including the empty one, average doesn't crash. It stays linked to the README, the code and the chat. Until we run it, it's just a claim.">
-  <p class="eyebrow">04 / STEP 2 · MAKE IT CHECKABLE</p><h1>Step 2: turn the promise into a test.</h1><p class="sub">“Never crashes” is vague. We rewrite it so a computer can check it: for every list - including the empty one - average() must not crash.</p>
+<section class="slide" data-duration="11" data-note="Step two: turn the policy into a precise claim. For each of the four combinations of recent and defective, the function's answer must equal recent OR defective. The claim keeps its policy source, code line, and agent context. Until checked, it is only a candidate.">
+  <p class="eyebrow">04 / STEP 2 · MAKE IT CHECKABLE</p><h1>Step 2: state the rule precisely.</h1><p class="sub">Two yes/no conditions give <b>four possible cases</b>. The function must return the same answer as the policy for every one.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="The promise, the code line and the chat log join into one claim to check">
-    <g class="reveal"><rect x="20" y="20" width="360" height="160" rx="12" class="node-blue"/><text x="44" y="64" class="svg-strong">Promise · README</text><text x="44" y="108" class="svg-small">average([]) returns 0,</text><text x="44" y="140" class="svg-small">never crashes</text></g>
-    <g class="reveal delay1"><rect x="420" y="20" width="360" height="160" rx="12" class="node"/><text x="444" y="64" class="svg-strong">Code · average()</text><text x="444" y="110" class="svg-mono" style="fill:var(--red);font-weight:700">sum(nums) / len(nums)</text><text x="444" y="148" class="svg-small">no empty-list check left</text></g>
-    <g class="reveal delay2"><rect x="820" y="20" width="360" height="160" rx="12" class="node-amber"/><text x="844" y="64" class="svg-strong">AI chat log</text><text x="844" y="108" class="svg-small">“Removed the empty-list</text><text x="844" y="140" class="svg-small">check. Looked unneeded.”</text></g>
+    <g class="reveal"><rect x="20" y="20" width="360" height="160" rx="12" class="node-blue"/><text x="44" y="64" class="svg-strong">Policy · requirement</text><text x="44" y="108" class="svg-small">recent OR defective</text><text x="44" y="140" class="svg-small">means refund</text></g>
+    <g class="reveal delay1"><rect x="420" y="20" width="360" height="160" rx="12" class="node"/><text x="444" y="64" class="svg-strong">Code · refund_ok()</text><text x="444" y="110" class="svg-mono" style="fill:var(--red);font-weight:700">recent and defective</text><text x="444" y="148" class="svg-small">different Boolean rule</text></g>
+    <g class="reveal delay2"><rect x="820" y="20" width="360" height="160" rx="12" class="node-amber"/><text x="844" y="64" class="svg-strong">Agent context</text><text x="844" y="108" class="svg-small">What the agent meant</text><text x="844" y="140" class="svg-small">to change, if saved</text></g>
     <path d="M200 180 C200 220 380 225 380 260 M600 180 V260 M1000 180 C1000 220 820 225 820 260" class="edge-hot route r1"/>
-    <g class="reveal delay3"><rect x="200" y="260" width="800" height="195" rx="14" fill="var(--white)" stroke="var(--teal)" stroke-width="3"/><text x="230" y="302" class="svg-strong">CLAIM TO CHECK</text><text x="230" y="350" class="svg-mono" style="fill:var(--ink)">∀ xs ∈ LISTS: average(xs) does not crash</text><text x="230" y="386" class="svg-small">“for every list - including the empty one”</text><text x="230" y="428" class="svg-small" style="fill:var(--amber);font-weight:700">Status: not checked yet</text></g>
+    <g class="reveal delay3"><rect x="200" y="260" width="800" height="195" rx="14" fill="var(--white)" stroke="var(--teal)" stroke-width="3"/><text x="230" y="302" class="svg-strong">CLAIM TO CHECK</text><text x="230" y="350" class="svg-mono" style="fill:var(--ink)">∀ r,d ∈ {False,True}: refund_ok(r,d) = r ∨ d</text><text x="230" y="386" class="svg-small">“For all four combinations, code must match policy.”</text><text x="230" y="428" class="svg-small" style="fill:var(--amber);font-weight:700">Status: not checked yet</text></g>
   </svg><div class="foot"><span>Every claim keeps a link to where it came from - that is the audit trail.</span><span>11 s</span></div>
 </section>
 
-<section class="slide" data-duration="13" data-note="Step three: run it. The empty list crashes, and one crash is enough to prove &quot;every list&quot; false. Then we look around. report() and grade_summary() use average too, and older promises might break. Each gets its own check before we call it broken.">
-  <p class="eyebrow">05 / STEP 3 · RUN IT, THEN LOOK AROUND</p><h1>Step 3: run it, then look around.</h1><p class="sub">We try every list, including the empty one. It crashes - and one crash is enough to prove the claim wrong. Then we check what else uses average().</p>
-  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Promise, code, run check and the empty-list crash, then branches to report, grade_summary and older promises">
-    <path d="M275 70 H335 M590 70 H650 M905 70 H965" class="edge"/><path d="M275 70 H335" class="edge-hot route r1"/><path d="M590 70 H650" class="edge-hot route r2"/><path d="M905 70 H965" class="edge-hot route r3"/>
-    <g class="route-node n1"><rect x="20" y="20" width="255" height="100" rx="10" class="node-blue"/><text x="42" y="60" class="svg-strong">Promise</text><text x="42" y="96" class="svg-mono">never crash</text></g>
-    <g class="route-node n2"><rect x="335" y="20" width="255" height="100" rx="10" class="node"/><text x="357" y="60" class="svg-strong">Code</text><text x="357" y="96" class="svg-mono">average()</text></g>
-    <g class="route-node n3"><rect x="650" y="20" width="255" height="100" rx="10" class="node-amber"/><text x="672" y="60" class="svg-strong">Run check</text><text x="672" y="96" class="svg-mono">every list</text></g>
-    <g class="route-node n4"><rect x="965" y="20" width="215" height="100" rx="10" class="node-red"/><text x="987" y="60" class="svg-strong">Crash!</text><text x="987" y="96" class="svg-mono">[] → ÷ 0</text></g>
-    <path d="M1072 120 V190 H190 V240 M600 190 V240 M1010 190 V240" class="edge-hot route r4"/>
-    <g class="route-node n5"><rect x="20" y="240" width="340" height="130" rx="10" class="node-amber"/><text x="42" y="280" class="svg-strong">report()</text><text x="42" y="314" class="svg-small">Does it crash too?</text><text x="42" y="350" class="svg-mono">unconfirmed → check</text></g>
-    <g class="route-node n5"><rect x="430" y="240" width="340" height="130" rx="10" class="node-amber"/><text x="452" y="280" class="svg-strong">grade_summary()</text><text x="452" y="314" class="svg-small">Does it crash too?</text><text x="452" y="350" class="svg-mono">unconfirmed → check</text></g>
-    <g class="route-node n5"><rect x="840" y="240" width="340" height="130" rx="10" class="node-amber"/><text x="862" y="280" class="svg-strong">Older promises</text><text x="862" y="314" class="svg-small">Still true now?</text><text x="862" y="350" class="svg-mono">unconfirmed → check</text></g>
-    <g class="reveal delay4"><rect x="300" y="400" width="600" height="58" rx="8" fill="var(--pale)" stroke="var(--teal)"/><text x="600" y="438" text-anchor="middle" class="svg-strong">Every lead gets its own check.</text></g>
-  </svg><div class="foot"><span>A lead is not a verdict - nothing is called broken until its own check fails.</span><span>13 s</span></div>
+<section class="slide" data-duration="13" data-note="Step three: check the complete truth table. The old but defective case should be yes, but the new code says no. The recent but not defective case fails too. One counterexample refutes the policy claim. Then the graph points us to the refund API, customer screen, and earlier promises; each needs its own check.">
+  <p class="eyebrow">05 / STEP 3 · CHECK ALL FOUR CASES</p><h1>Two missing cases reveal the mistake.</h1><p class="sub">The existing tests covered the ends. We check every combination and compare the policy with the code.</p>
+  <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Four-case truth table: neither and both agree, defective-only and recent-only disagree; affected sites require separate checks">
+    <g class="reveal"><rect x="10" y="30" width="275" height="190" rx="10" class="node-green"/><text x="32" y="76" class="svg-strong">Neither</text><text x="32" y="122" class="svg-small">Policy: no refund</text><text x="32" y="156" class="svg-small">Code: no refund</text><text x="32" y="198" class="svg-mono" style="fill:var(--green)">MATCH ✓</text></g>
+    <g class="reveal delay1"><rect x="310" y="30" width="275" height="190" rx="10" class="node-red"/><text x="332" y="76" class="svg-strong">Defective only</text><text x="332" y="122" class="svg-small">Policy: refund</text><text x="332" y="156" class="svg-small">Code: deny</text><text x="332" y="198" class="svg-mono" style="fill:var(--red)">MISMATCH ✕</text></g>
+    <g class="reveal delay2"><rect x="610" y="30" width="275" height="190" rx="10" class="node-red"/><text x="632" y="76" class="svg-strong">Recent only</text><text x="632" y="122" class="svg-small">Policy: refund</text><text x="632" y="156" class="svg-small">Code: deny</text><text x="632" y="198" class="svg-mono" style="fill:var(--red)">MISMATCH ✕</text></g>
+    <g class="reveal delay3"><rect x="910" y="30" width="275" height="190" rx="10" class="node-green"/><text x="932" y="76" class="svg-strong">Both</text><text x="932" y="122" class="svg-small">Policy: refund</text><text x="932" y="156" class="svg-small">Code: refund</text><text x="932" y="198" class="svg-mono" style="fill:var(--green)">MATCH ✓</text></g>
+    <path d="M448 220 V260 H210 V286 M748 220 V260 H990 V286 M600 260 V286" class="edge-hot route r4"/>
+    <g class="reveal delay4"><rect x="10" y="286" width="375" height="120" rx="10" class="node-amber"/><text x="32" y="330" class="svg-strong">Refund API</text><text x="32" y="370" class="svg-small">Does it deny this case too?</text></g>
+    <g class="reveal delay4"><rect x="412" y="286" width="375" height="120" rx="10" class="node-amber"/><text x="434" y="330" class="svg-strong">Customer screen</text><text x="434" y="370" class="svg-small">What decision does it show?</text></g>
+    <g class="reveal delay4"><rect x="814" y="286" width="375" height="120" rx="10" class="node-amber"/><text x="836" y="330" class="svg-strong">Earlier promises</text><text x="836" y="370" class="svg-small">Which still hold?</text></g>
+    <g class="reveal delay4"><text x="600" y="455" text-anchor="middle" class="svg-small">One mismatch refutes the rule. Each affected site needs its own check.</text></g>
+  </svg><div class="foot"><span>The four-case domain is complete; downstream impact remains unconfirmed until tested.</span><span>13 s</span></div>
 </section>
 
 <section class="slide" data-duration="11" data-note="Step four: only four honest answers. Refuted. Proved, for the cases we listed. Tested, on some examples. Or unknown. The AI can suggest. Only a real run decides.">
@@ -168,7 +167,7 @@
   <p class="eyebrow">10 / WHO DECIDES</p><h1>The AI finds it. A human signs for it.</h1><p class="sub">The AI is never allowed to approve its own work. It hands a person the evidence, and the person decides.</p>
   <svg class="visual" viewBox="-4 0 1208 300" role="img" aria-label="Four steps: AI finds it, a developer fixes it, the checks re-run, a named human signs">
     <path d="M272 110 H306 M298 102 L306 110 L298 118 M582 110 H616 M608 102 L616 110 L608 118 M892 110 H926 M918 102 L926 110 L918 118" class="edge-hot"/>
-    <g class="reveal"><rect x="0" y="20" width="270" height="190" rx="12" class="node-red"/><text x="22" y="66" class="svg-strong">1 · AI finds it</text><text x="22" y="112" class="svg-small">Spots the crash.</text><text x="22" y="144" class="svg-small">Says: “fix this”.</text></g>
+    <g class="reveal"><rect x="0" y="20" width="270" height="190" rx="12" class="node-red"/><text x="22" y="66" class="svg-strong">1 · AI finds it</text><text x="22" y="112" class="svg-small">Finds a wrong answer.</text><text x="22" y="144" class="svg-small">Attaches the case.</text></g>
     <g class="reveal delay1"><rect x="310" y="20" width="270" height="190" rx="12" class="node"/><text x="332" y="66" class="svg-strong">2 · Dev fixes it</text><text x="332" y="112" class="svg-small">A person changes</text><text x="332" y="144" class="svg-small">the code.</text></g>
     <g class="reveal delay2"><rect x="620" y="20" width="270" height="190" rx="12" class="node-green"/><text x="642" y="66" class="svg-strong">3 · Checks re-run</text><text x="642" y="112" class="svg-small">Same checks,</text><text x="642" y="144" class="svg-small">now they pass.</text></g>
     <g class="reveal delay3"><rect x="930" y="20" width="270" height="190" rx="12" fill="var(--amberp)" stroke="var(--amber)" stroke-width="3"/><text x="952" y="66" class="svg-strong">4 · Human signs</text><text x="952" y="112" class="svg-small">A named person</text><text x="952" y="144" class="svg-small">reads it, says yes</text><text x="952" y="176" class="svg-small">or no.</text></g>
@@ -180,10 +179,10 @@
   <div class="foot"><span>Revocable: if the requirements change, the review opens again. <a href="claim-tableau.html">Code tableau ↗</a></span><span>13 s</span></div>
 </section>
 
-</main><div class="controls"><button id="prev" aria-label="Previous scene">←</button><button id="next">Next scene →</button><button id="auto" class="primary">Present 2:00</button><button id="notesBtn" aria-label="Toggle speaker notes">Notes</button><button id="detailsBtn" aria-label="Toggle deep-dive details">Details</button><a class="tableau-link" href="claim-tableau.html">Code tableau ↗</a><span class="counter" id="counter">1 / 9</span><div class="progress" aria-label="Presentation progress"><span id="bar"></span></div><span class="counter" id="clock">2:00</span></div><aside class="notes" id="notes"><b>Say this:</b> <span id="noteText"></span></aside><aside class="notes" id="details" style="display:none"><b>Deep dive — how it is verifiable:</b> <span id="detailText"></span></aside></div>
+</main><div class="controls"><button id="prev" aria-label="Previous scene">←</button><button id="next">Next scene →</button><button id="auto" class="primary">Present 2:00</button><button id="notesBtn" aria-label="Toggle speaker notes">Notes</button><button id="detailsBtn" aria-label="Toggle deep-dive details">Details</button><a class="tableau-link" href="claim-tableau.html">Code tableau ↗</a><span class="counter" id="counter">1 / 10</span><div class="progress" aria-label="Presentation progress"><span id="bar"></span></div><span class="counter" id="clock">2:00</span></div><aside class="notes" id="notes"><b>Say this:</b> <span id="noteText"></span></aside><aside class="notes" id="details" style="display:none"><b>Deep dive — how it is verifiable:</b> <span id="detailText"></span></aside></div>
 <script>
 const DETAILS=[
-`<b>Why this matters.</b> A green test suite proves only that the tests pass. The promise the code makes to its users - "average([]) returns 0, it never crashes" - is usually not a test, it is a sentence in a README. AI patches change contracts silently because nothing links the patch back to the sentence. This system makes that link explicit: every promise becomes a claim, every claim gets a checker, and every checker either finds a witness or reports honestly.`,
+`<b>Why this matters.</b> A green test suite proves only that its chosen cases pass. Here, tests cover (recent, defective) = (False, False) and (True, True). Both OR and AND give the same answers on those cases. The two mixed cases distinguish the rules: each should qualify for a refund, but the changed code denies it. The system links the policy to the changed line, proposes the missing cases, and records the executed result.`,
 `<b>The trust contract (scoped formal verification), precisely.</b>
 <ul>
 <li>Every claim carries: the sentence, its source (issue/README/hunk), its scope (the finite domain), and one command that re-runs the check.</li>
@@ -198,20 +197,20 @@ const DETAILS=[
 <li><b>Session / Entire</b> node: prompt → tool call → decision → checkpoint (source: transcript uuid). Edge <code>explains</code> → claim when present; when no session was saved that edge is missing and the gap is marked - a missing edge is evidence of a gap, never an explanation.</li>
 </ul>
 MongoDB Atlas keeps nodes/edges/traversals ($graphLookup) as an optional backend; the Entire Trail carries the receipt to the human.`,
-`<b>The formal statement.</b> The promise becomes a quantified sentence over a finite, listed domain:
+`<b>The formal statement.</b> The policy becomes a quantified sentence over a finite, listed domain:
 <ul>
-<li>Claim A1 (a CANDIDATE CLAIM until it is run): <b>∀ xs ∈ LISTS: average(xs) does not raise</b>, where LISTS = a listed set of number lists that includes the empty list.</li>
-<li><code>source_kind: implicit_in_code</code> - the author never wrote this sentence; it is inherited from the README promise P-1.</li>
-<li><code>source_ref: stats.py · average hunk (patch 8c41d, parent SHA 3f2a1)</code> · <code>check_cmd: python -c "from stats import average; average([])"</code>.</li>
-<li>Verdict: <b>Refuted</b> - witness: <code>average([])</code> raises ZeroDivisionError.</li>
+<li>Claim A1 (a candidate until checked): <b>∀ r,d ∈ {False, True}: refund_ok(r,d) = r OR d</b>. This is four cases, not an unbounded promise.</li>
+<li>Policy source: a refund is allowed when the purchase is recent OR the item is defective. The code hunk changed that operator to AND.</li>
+<li>Re-run the decisive case: <code>python -c "from refunds import refund_ok; print(refund_ok(False, True))"</code>; compare its output with the policy's expected <code>True</code>.</li>
+<li>Verdict: <b>Refuted</b> - witness: <code>(False, True)</code> returns <code>False</code>. The other mixed case also disagrees.</li>
 </ul>
 Code review reads: open the hunk, see the claim it carries, re-run the command. Sentence, source, scope and check travel together.`,
 `<b>The logic, and the blast radius.</b>
 <ul>
 <li>R-RUN: a claim is true or false because code was executed, not explained.</li>
-<li>The empty list raises → <b>one witness refutes the universal claim</b> (¬∀ = ∃ counterexample).</li>
-<li>R-CALL: every function that calls the changed one (report, grade_summary) is re-run on the SAME counterexample - one refutation is reused, not re-invented.</li>
-<li>R-HIST: earlier promises are re-checked against the new code - the README still says "average([]) returns 0".</li>
+<li>The truth table checks all four Boolean inputs. Two match, two differ. <b>One witness refutes the universal claim</b> (¬∀ = ∃ counterexample).</li>
+<li>R-CALL: callers such as the refund API and customer screen are located through the graph and re-run on the same witness.</li>
+<li>R-HIST: earlier policy promises are re-checked against the new code.</li>
 <li>Every downstream site stays <i>unconfirmed → check</i> until its own check runs. Propagation finds where to look; it does not declare guilt.</li>
 </ul>`,
 `<b>The four verdicts, and who may set them.</b>
