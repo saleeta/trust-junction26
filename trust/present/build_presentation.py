@@ -55,6 +55,7 @@ def load_artifacts(root: Path) -> dict:
             for n in (1, 2, 3, 4, 5)
             if (root / ".trust" / "pr-reviews" / f"pr{n}.json").exists()
         },
+        "brain": load_json(root / ".trust" / "brain-compare.json"),
     }
 
 
@@ -782,6 +783,48 @@ def s_pr_scoreboard(d: dict) -> str:
     review-all-prs.html</a> · re-run: python trust/generic/review_prs.py</p>"""
 
 
+def s_context_ledger(d: dict) -> str:
+    brain = d.get("brain")
+    rows = ""
+    if brain:
+        a = {c.get("id"): c for c in brain.get("arm_a") or []}
+        for c in brain.get("arm_b") or []:
+            aid = c.get("id")
+            al = a.get(aid, {}).get("label", "—")
+            bl = c.get("label")
+            note = ("new from session" if aid not in a
+                    else ("resolved by session" if c.get("via_session")
+                          else ("resolved by execution" if al != bl else "unchanged")))
+            rows += (f"<div class='vrow'><b>{esc(aid)}</b> "
+                     f"<span class='chip dim'>{esc(al)}</span> → "
+                     f"<span class='chip bad'>{esc(bl)}</span> "
+                     f"<span class='dim'>{esc(note)}</span></div>")
+    return f"""
+    <h2>Context + ledger: Entire and MongoDB are not add-ons</h2>
+    <div class="split">
+      <div class="card">
+        <h3>the foobar brain compare</h3>
+        <p>One AI patch, reviewed twice. Without the agent context, intent is
+        Unknown. With the session from the Entire Trail, the agent's own words
+        resolve it - and the executed check still refutes the promise.</p>
+        {rows or '<p class="dim">run python trust/brain/compare.py first</p>'}
+        <p><a href="brain-compare.html" target="_blank">brain-compare.html ↗</a></p>
+      </div>
+      <div class="card amber">
+        <h3>Entire Trail - the context channel</h3>
+        <p>session → commit → decision travels with the change. Trail #1 pending
+        (known gap), Trail #2 approved by Saleeta Qadir, Trail #3 carries the
+        foobar agent context. The human boundary lives here.</p>
+      </div>
+    </div>
+    <div class="card blue">
+      <h3>MongoDB Atlas - the audit ledger</h3>
+      <p>nodes · edges · traversals; $graphLookup walks the blast radius; every
+      pass records who visited what and the token cost - the review is
+      re-walkable by anyone. Proven on a local Mongo 7 container.</p>
+    </div>"""
+
+
 # ---------------------------------------------------------------------------
 # Part 2: the real PR, proof-carrying
 # ---------------------------------------------------------------------------
@@ -913,6 +956,7 @@ SLIDES = [
     ("The digest: issues first", s_digest),
     ("The named acceptance", s_acceptance),
     ("Every PR, reviewed: scoreboard", s_pr_scoreboard),
+    ("Context + ledger: Entire & MongoDB", s_context_ledger),
     ("The real PR: setup", s_setup),
     ("Before: the wrong review", s_before),
     ("After: the checked base", s_after),

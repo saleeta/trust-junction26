@@ -62,6 +62,11 @@ SCRIPT = [
     "Grey: how much text a basic AI must read — up to thirty-six thousand tokens. Purple: what "
     "our review actually needed — four hundred.",
 
+    "And none of this floats in the air. The Entire Trail carries the agent context with the "
+    "change — and the brain compare proves why that matters: with the session, the agent's own "
+    "words refute its intent. MongoDB keeps the audit ledger — every visit, every token, "
+    "re-walkable by anyone. They are not add-ons. They are essential parts.",
+
     "Finally — who decides? The AI finds the problem, but it is never allowed to approve its "
     "own work. It hands a person the evidence, and the person decides. In our repo, a named "
     "engineer — Saleeta Qadir — signed the corrected patch. The AI cannot sign. A human owns the trust.",
