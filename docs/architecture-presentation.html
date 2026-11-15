@@ -47,7 +47,7 @@
 </head>
 <body><div class="app"><main class="stage" aria-label="Earned Trust animated talk">
 
-<section class="slide active" data-duration="13" data-note="Here is the problem, with a simple made-up example everyone knows. A function called average promises one thing: if you give it an empty list, it returns zero - it never crashes. Someone asked an AI to make average shorter, and it deleted the line that checks for an empty list, because it looked unnecessary. Every test stayed green, so it looked fine. But no test ever passed an empty list. So the first time someone does, the program crashes with a divide-by-zero error. The tests passed and the promise broke anyway.">
+<section class="slide active" data-duration="13" data-note="Here's a simple example. An AI made average() shorter by deleting its empty-list check. The tests stayed green, because none used an empty list. So average of an empty list now crashes.">
   <p class="eyebrow">01 / THE PROBLEM · A SIMPLE EXAMPLE</p><h1>The tests passed. The code still broke.</h1><p class="sub">An AI was asked to make <b>average()</b> shorter. Every test stayed green - because no test ever tried an empty list.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="The promise, the AI's change and the green tests, leading to a divide-by-zero crash on an empty list">
     <g class="reveal"><rect x="20" y="20" width="360" height="190" rx="12" class="node-blue"/><text x="44" y="66" class="svg-strong">The promise</text><text x="44" y="112" class="svg-small">average([]) returns 0.</text><text x="44" y="142" class="svg-small">It never crashes.</text></g>
@@ -57,7 +57,7 @@
   </svg><div class="foot"><span>A simple made-up example to explain the idea. Slides 8 and 9 show real results from this project.</span><span>13 s</span></div>
 </section>
 
-<section class="slide" data-duration="15" data-note="Here is the same change, reviewed two ways. On the left, a normal AI reviewer reads the code and says: shorter, tests pass, approve. It sounds confident - but it never tried an empty list, so it missed the crash completely. On the right is our review. Step one: write down what the code must do - average must never crash, even for an empty list. Step two: actually run it with an empty list. Step three: look at what happened - divide by zero, it crashed. So the answer is: broken, and here is the proof. Anyone can run that one line and see the same crash. That's the whole idea: don't believe the AI's opinion - make it show proof.">
+<section class="slide" data-duration="15" data-note="A normal AI review says: shorter, tests pass, approve. It never tried an empty list. We do it differently. Write down the promise. Actually run average of an empty list. Look. It crashes. That's proof, and anyone can repeat it.">
   <p class="eyebrow">02 / THE IDEA</p><h1>Don't take the AI's word. Make it show proof.</h1><p class="sub">Same change, two reviews. One gives an opinion. The other runs a test that anyone can repeat.</p>
   <div class="split">
     <div class="compare dark reveal"><h2>A normal AI review</h2>
@@ -75,7 +75,7 @@
   <div class="foot"><span>An opinion can be wrong without anyone noticing. A test shows you.</span><span>15 s</span></div>
 </section>
 
-<section class="slide" data-duration="12" data-note="Step one: gather the evidence. We collect three things. What was promised - the README says average of an empty list is zero and never crashes. What the AI actually changed - it deleted the empty-list check. And why - from the AI's chat log in Entire, we see it was asked to make the code shorter and decided that check looked unneeded. On their own, each one looks fine. Put side by side, the bug jumps out: the promise depends on exactly the line the AI deleted. If no chat log was saved, that card just says unknown - we never guess.">
+<section class="slide" data-duration="12" data-note="Step one: gather three things. The promise, the change, and the AI's reason from its Entire chat log. Alone, each looks fine. Together, you see the promise needs the line the AI deleted.">
   <p class="eyebrow">03 / STEP 1 · GATHER EVIDENCE</p><h1>Step 1: gather the evidence.</h1><p class="sub">What was promised, what the AI changed, and why it did it - from the AI's own chat log. Then we put them side by side.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="README promise, the deleted empty-list check, and the AI chat log feed one review map that shows the promise needs the deleted line">
     <path d="M185 210 C185 245 420 240 420 275 M600 210 V275 M1015 210 C1015 245 780 240 780 275" class="edge-hot route r1"/>
@@ -87,7 +87,7 @@
   </svg><div class="foot"><span>The map can be stored in MongoDB Atlas. No chat log saved? That card says “unknown” instead of guessing.</span><span>12 s</span></div>
 </section>
 
-<section class="slide" data-duration="14" data-note="Step two: turn the promise into a test. Never crashes is a bit vague, so we rewrite it so a computer can check it: for every list - including the empty one - average must not crash. That sentence stays linked to where it came from: the README promise, the exact line of code, and the AI's own reason for the change. Until we actually run it, it's just a claim. Not true, not false - not checked yet.">
+<section class="slide" data-duration="14" data-note="Step two: make the promise checkable. &quot;Never crashes&quot; becomes: for every list, including the empty one, average doesn't crash. It stays linked to the README, the code and the chat. Until we run it, it's just a claim.">
   <p class="eyebrow">04 / STEP 2 · MAKE IT CHECKABLE</p><h1>Step 2: turn the promise into a test.</h1><p class="sub">“Never crashes” is vague. We rewrite it so a computer can check it: for every list - including the empty one - average() must not crash.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="The promise, the code line and the chat log join into one claim to check">
     <g class="reveal"><rect x="20" y="20" width="360" height="160" rx="12" class="node-blue"/><text x="44" y="64" class="svg-strong">Promise · README</text><text x="44" y="108" class="svg-small">average([]) returns 0,</text><text x="44" y="140" class="svg-small">never crashes</text></g>
@@ -98,7 +98,7 @@
   </svg><div class="foot"><span>Every claim keeps a link to where it came from - that is the audit trail.</span><span>14 s</span></div>
 </section>
 
-<section class="slide" data-duration="16" data-note="Step three: run it, then look around. We try average on every list on our list - including the empty one. The empty one crashes: divide by zero. One crash is enough - it proves for every list is false. That's logic, not opinion. Then we ask: what else uses average? A report function, a grade summary, and older promises might break too. We don't call them broken yet - each one gets its own check first.">
+<section class="slide" data-duration="16" data-note="Step three: run it. The empty list crashes, and one crash is enough to prove &quot;every list&quot; false. Then we look around. report() and grade_summary() use average too, and older promises might break. Each gets its own check before we call it broken.">
   <p class="eyebrow">05 / STEP 3 · RUN IT, THEN LOOK AROUND</p><h1>Step 3: run it, then look around.</h1><p class="sub">We try every list, including the empty one. It crashes - and one crash is enough to prove the claim wrong. Then we check what else uses average().</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Promise, code, run check and the empty-list crash, then branches to report, grade_summary and older promises">
     <path d="M275 70 H335 M590 70 H650 M905 70 H965" class="edge"/><path d="M275 70 H335" class="edge-hot route r1"/><path d="M590 70 H650" class="edge-hot route r2"/><path d="M905 70 H965" class="edge-hot route r3"/>
@@ -114,7 +114,7 @@
   </svg><div class="foot"><span>A lead is not a verdict - nothing is called broken until its own check fails.</span><span>16 s</span></div>
 </section>
 
-<section class="slide" data-duration="11" data-note="Step four: give an honest answer. There are only four. Refuted: we found a case where it breaks. Proved in scope: we checked every case on our list. Tested: some examples passed, but not every case was tried. Unknown: we couldn't check it, so we say so. The AI can suggest ideas, but it can't hand out these answers - only a real run can.">
+<section class="slide" data-duration="11" data-note="Step four: only four honest answers. Refuted. Proved, for the cases we listed. Tested, on some examples. Or unknown. The AI can suggest. Only a real run decides.">
   <p class="eyebrow">06 / STEP 4 · ANSWER HONESTLY</p><h1>Step 4: only four honest answers.</h1><p class="sub">An answer only counts if a real run produced it. The AI can suggest ideas, but it can't hand out answers.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Four answers: refuted, proved in scope, tested, unknown">
     <g class="reveal"><rect x="20" y="20" width="560" height="140" rx="12" class="node-red"/><text x="48" y="74" class="svg-strong">REFUTED</text><text x="48" y="120" class="svg-small">We found a case where it breaks.</text></g>
@@ -125,7 +125,7 @@
   </svg><div class="foot"><span>No “looks good to me” - those four words are the whole vocabulary.</span><span>11 s</span></div>
 </section>
 
-<section class="slide" data-duration="13" data-note="How detailed is this, and does it still work when the project gets big? We check promises, not single lines. A promise - like average never crashes, even on an empty list - is the thing we prove. The lines that touch it point to it, the failing case shows where it breaks, and the proof is a command anyone can re-run. As the project grows, every promise we've checked becomes a test for the next change. So the safety net keeps growing, but each review only reads the new change - it stays small.">
+<section class="slide" data-duration="13" data-note="We check promises, not lines. Many lines point to one promise, with a failing case and a re-runnable proof. Old promises become tests for new changes, but each review only reads the change.">
   <p class="eyebrow">07 / HOW IT GROWS</p><h1>We check promises, not lines.</h1><p class="sub">One promise covers many lines. Each review only reads what changed - and every promise already checked becomes a test for the next change.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Five levels from requirement to proof, and promises piling up across pull requests while each review stays the size of the change">
     <g class="reveal"><rect x="20" y="10" width="560" height="76" rx="10" class="node"/><text x="44" y="57" class="svg-strong">Requirement</text><text x="250" y="57" class="svg-small">what the issue asked for</text></g>
@@ -143,7 +143,7 @@
   </svg><div class="foot"><span>Today each review lists the earlier promises it re-checks; an automatic shared registry is the next step.</span><span>13 s</span></div>
 </section>
 
-<section class="slide" data-duration="13" data-note="Does it work on real code? We ran the same checks on all five pull requests of this project. Every one got honest answers - including the bad news. And look at the numbers on the right. A basic AI reviewer has to read the whole change - up to 36.6 thousand tokens. Our review only needed the evidence - about 0.4 thousand. That's how much text it read, not a grade of quality.">
+<section class="slide" data-duration="13" data-note="Does it work? We ran it on all five of our pull requests, and kept the bad news. A basic AI reads up to 36,600 tokens of diff. Ours carried about 400.">
   <p class="eyebrow">08 / DOES IT WORK?</p><h1>We ran it on all five of our PRs.</h1><p class="sub">Same checks on every change. Grey = how much text a basic AI must read. Purple = what our review actually needed.</p>
   <svg class="visual" viewBox="0 0 1200 470" role="img" aria-label="Scoreboard of five PRs with what the checks found and how much text each review read">
     <g class="reveal"><text x="20" y="30" class="svg-small">PR</text><text x="90" y="30" class="svg-small">What it changed</text><text x="560" y="30" class="svg-small">What the checks found</text><text x="840" y="30" class="svg-small">Text to read: basic AI → ours</text><path d="M20 46 H1180" class="edge"/></g>
@@ -155,7 +155,7 @@
   </svg><div class="foot"><span>basic AI: whole diff · ours: only the evidence · estimates (chars/4) · <a href="review-all-prs.html">full table ↗</a></span><span>13 s</span></div>
 </section>
 
-<section class="slide" data-duration="13" data-note="Last question: who says yes? Never the AI. It finds the problem and says fix this. A developer fixes the code. The same checks run again, and now they pass. Then a real, named person reads the receipt and signs - and that signature can be taken back if the requirements change later. We did this for real: the corrected toy-shop fix was re-checked and approved on Entire Trail number two. The AI-made MessagePack patch failed its checks and is still waiting for a person, on Trail number one.">
+<section class="slide" data-duration="13" data-note="Who says yes? Never the AI. It finds the bug, someone fixes it, the checks re-run, and a named person signs. Our toy-shop fix is approved on Entire. The MessagePack patch still waits.">
   <p class="eyebrow">09 / WHO DECIDES</p><h1>The AI finds it. A human signs for it.</h1><p class="sub">The AI is never allowed to approve its own work. It hands a person the evidence, and the person decides.</p>
   <svg class="visual" viewBox="-4 0 1208 300" role="img" aria-label="Four steps: AI finds it, a developer fixes it, the checks re-run, a named human signs">
     <path d="M272 110 H306 M298 102 L306 110 L298 118 M582 110 H616 M608 102 L616 110 L608 118 M892 110 H926 M918 102 L926 110 L918 118" class="edge-hot"/>

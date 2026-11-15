@@ -3,15 +3,33 @@
 ## Architecture presentation (recommended)
 
 Open [the animated architecture deck](demo/architecture-presentation.html).
-Press **Present 2:00** for the timed seven-scene run, or use arrow keys to
-advance at your own pace. **Notes** (or `N`) shows the narration for the current
-scene. The deck moves from the three data sources through graph structure,
-recorded traversal, scoped verification, the real #2297 counterexample,
-measured context cost, and a pending human decision. It keeps MongoDB Atlas
-as the optional evidence-tree backend and Entire as the collaboration layer.
+Press **Present 2:00** for the timed nine-slide run, or use the arrow keys to
+go at your own pace. **Notes** (or `N`) shows the line to say for the current
+slide; **Details** (or `D`) shows the technical deep dive for questions.
 
-The [interactive review replay](demo/concept-deck.html) is the evidence view
-for questions after the timed presentation.
+Slides 1–5 use a simple made-up example every programmer knows: an AI
+"shortens" `average()` by deleting its empty-list check, the tests stay green,
+and `average([])` raises `ZeroDivisionError`. Slides 8–9 show real results from
+this project (five scored PRs; toy-shop PR #5 approved on Entire Trail #2;
+MessagePack #2297 pending on Trail #1).
+
+### Script (about 310 words, 2.5–2.75 words per second)
+
+| Time | Slide | Say |
+|---|---|---|
+| 0–13 s | **1. The tests passed. The code still broke.** | “Here's a simple example. An AI made average() shorter by deleting its empty-list check. The tests stayed green, because none used an empty list. So average of an empty list now crashes.” |
+| 13–28 s | **2. Don't take the AI's word. Make it show proof.** | “A normal AI review says: shorter, tests pass, approve. It never tried an empty list. We do it differently. Write down the promise. Actually run average of an empty list. Look. It crashes. That's proof, and anyone can repeat it.” |
+| 28–40 s | **3. Step 1: gather the evidence.** | “Step one: gather three things. The promise, the change, and the AI's reason from its Entire chat log. Alone, each looks fine. Together, you see the promise needs the line the AI deleted.” |
+| 40–54 s | **4. Step 2: turn the promise into a test.** | “Step two: make the promise checkable. "Never crashes" becomes: for every list, including the empty one, average doesn't crash. It stays linked to the README, the code and the chat. Until we run it, it's just a claim.” |
+| 54–70 s | **5. Step 3: run it, then look around.** | “Step three: run it. The empty list crashes, and one crash is enough to prove "every list" false. Then we look around. report() and grade_summary() use average too, and older promises might break. Each gets its own check before we call it broken.” |
+| 70–81 s | **6. Step 4: only four honest answers.** | “Step four: only four honest answers. Refuted. Proved, for the cases we listed. Tested, on some examples. Or unknown. The AI can suggest. Only a real run decides.” |
+| 81–94 s | **7. We check promises, not lines.** | “We check promises, not lines. Many lines point to one promise, with a failing case and a re-runnable proof. Old promises become tests for new changes, but each review only reads the change.” |
+| 94–107 s | **8. We ran it on all five of our PRs.** | “Does it work? We ran it on all five of our pull requests, and kept the bad news. A basic AI reads up to 36,600 tokens of diff. Ours carried about 400.” |
+| 107–120 s | **9. The AI finds it. A human signs for it.** | “Who says yes? Never the AI. It finds the bug, someone fixes it, the checks re-run, and a named person signs. Our toy-shop fix is approved on Entire. The MessagePack patch still waits.” |
+
+The deck advances on its own in **Present 2:00** mode; finish each line as the
+next slide's animation starts. The interactive review replay below is the
+evidence view for questions after the timed presentation.
 
 ## Interactive review replay
 
